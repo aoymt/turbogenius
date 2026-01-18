@@ -28,16 +28,36 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 class Readforward_genius(GeniusIO):
     """
+    Wrapper class for pyturbo readforward functionality.
 
-    This class is a wrapper of pyturbo readforward class
+    This class provides a high-level interface to the readforward program,
+    which is used for analyzing correlation functions and performing
+    correlated sampling calculations.
 
-    Attributes:
-         in_fort10 (str): fort.10 WF file
-         corr_fort10 (str): fort.10 WF file (reference for the correlated sampling)
-         bin_block (int): binning length
-         warmupblocks (int): the number of disregarded blocks
-         corr_sampling (bool): if True, correlated sampling=True
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10_in".
+    corr_fort10 : str, optional
+        Reference fort.10 wavefunction file for correlated sampling,
+        by default "fort.10_corr".
+    bin_block : int, optional
+        Binning length for correlation function analysis, by default 10.
+    warmupblocks : int, optional
+        Number of disregarded blocks at the beginning, by default 2.
+    corr_sampling : bool, optional
+        If True, enable correlated sampling, by default True.
 
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    corr_fort10 : str
+        Reference fort.10 wavefunction file for correlated sampling.
+    readforward : Readforward
+        Underlying pyturbo Readforward instance.
+    io_fort10 : IO_fort10
+        IO_fort10 instance for reading fort.10 files.
     """
 
     def __init__(
@@ -81,10 +101,12 @@ class Readforward_genius(GeniusIO):
         """
         Generate input files and run the command.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
-
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "readforward.input".
+        output_name : str, optional
+            Output file name, by default "out_readforward".
         """
         self.generate_input(input_name=input_name)
         self.run(input_name=input_name, output_name=output_name)
@@ -93,9 +115,10 @@ class Readforward_genius(GeniusIO):
         """
         Generate input file.
 
-        Args:
-            input_name (str): input file name
-
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "readforward.input".
         """
         self.readforward.generate_input(input_name=input_name)
 
@@ -107,9 +130,17 @@ class Readforward_genius(GeniusIO):
         """
         Run the command.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "readforward.input".
+        output_name : str, optional
+            Output file name, by default "out_readforward".
+
+        Raises
+        ------
+        AssertionError
+            If the calculation does not complete successfully.
         """
         self.readforward.run(input_name=input_name, output_name=output_name)
         flags = self.readforward.check_results(output_names=[output_name])
@@ -119,10 +150,17 @@ class Readforward_genius(GeniusIO):
         """
         Check the result.
 
-        Args:
-            output_names (list): a list of output file names
-        Returns:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        output_names : list, optional
+            A list of output file names to check. If None, defaults to
+            ["out_readforward"], by default None.
+
+        Returns
+        -------
+        bool
+            True if all the runs were successful, False if an error is
+            detected in the files.
         """
         if output_names is None:
             output_names = ["out_readforward"]

@@ -29,14 +29,29 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 class Convertfort10(FortranIO):
     """
+    Wrapper class for TurboRVB convertfort10.x program.
 
-    This class is a wrapper of turborvb convertfort10.x
+    This class provides an interface to convert fort.10 wavefunction files,
+    including mesh generation and conversion between different formats.
 
-    Attributes:
-         in_fort10 (str): input fort.10
-         out_fort10 (str): template fort.10
-         namelist (Namelist): fortran namelist for convertfort10.x
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10_in".
+    out_fort10 : str, optional
+        Output fort.10 wavefunction file (template), by default "fort.10_out".
+    namelist : Namelist, optional
+        Namelist object containing program parameters. If None, an empty
+        Namelist is created, by default None.
 
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    out_fort10 : str
+        Output fort.10 wavefunction file.
+    namelist : Namelist
+        Namelist object containing program parameters.
     """
 
     def __init__(
@@ -45,6 +60,24 @@ class Convertfort10(FortranIO):
         out_fort10: str = "fort.10_out",
         namelist: Optional[Namelist] = None,
     ):
+        """
+        Initialize the Convertfort10 class.
+
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10_in".
+        out_fort10 : str, optional
+            Output fort.10 wavefunction file (template), by default "fort.10_out".
+        namelist : Namelist, optional
+            Namelist object containing program parameters. If None, an empty
+            Namelist is created, by default None.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the fort.10 files or pseudo.dat (if needed) is not found.
+        """
         if namelist is None:
             namelist = Namelist()
 
@@ -60,7 +93,14 @@ class Convertfort10(FortranIO):
         self.namelist = namelist
 
     def __str__(self):
+        """
+        Return string representation of the Convertfort10 object.
 
+        Returns
+        -------
+        str
+            String description of the object.
+        """
         output = [
             "TurboRVB convertfort10 python wrapper",
         ]
@@ -68,17 +108,23 @@ class Convertfort10(FortranIO):
 
     def sanity_check(self) -> None:
         """
-        Sanity check
+        Perform sanity checks on the input parameters.
 
+        Notes
+        -----
+        This method is a placeholder and does nothing. It should be
+        implemented to validate input parameters.
         """
         pass
 
     def generate_input(self, input_name: str = "convertfort10.input") -> None:
         """
-        Generate input file.
+        Generate input file for the convertfort10 program.
 
-        Args:
-            input_name (str): input file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Output input file name, by default "convertfort10.input".
         """
         self.namelist.write(input_name)
         logger.info(f"{input_name} has been generated.")
@@ -89,11 +135,19 @@ class Convertfort10(FortranIO):
         output_name: str = "out_conv",
     ) -> None:
         """
-        Run the command.
+        Run the convertfort10 program.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "convertfort10.input".
+        output_name : str, optional
+            Output file name, by default "out_conv".
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            If the program execution fails.
         """
         run(
             turbo_convertfort10_run_command,
@@ -103,12 +157,19 @@ class Convertfort10(FortranIO):
 
     def check_results(self, output_names: Optional[list] = None) -> list:
         """
-        Check the result.
+        Check the results of the convertfort10 program execution.
 
-        Args:
-            output_names (list): a list of output file names
-        Returns:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        output_names : list, optional
+            List of output file names to check. If None, defaults to
+            ["out_conv"], by default None.
+
+        Returns
+        -------
+        list of bool
+            List of boolean flags indicating success for each output file.
+            True if the file contains "Overlap.*square", False otherwise.
         """
         if output_names is None:
             output_names = ["out_conv"]
@@ -128,13 +189,24 @@ class Convertfort10(FortranIO):
         in_fort10: str = "fort.10_in", out_fort10: str = "fort.10_out"
     ):  # -> namelist
         """
-        Read default namelist values from turbogenius database
+        Read default namelist values from the turbogenius database.
 
-        Args:
-            in_fort10 (str): input fort.10
-            out_fort10 (str): template fort.10
-        Returns:
-            Namelist: default namelist values taken from the database
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 file (currently not used), by default "fort.10_in".
+        out_fort10 : str, optional
+            Template fort.10 file (currently not used), by default "fort.10_out".
+
+        Returns
+        -------
+        Namelist
+            Namelist object with default parameter values.
+
+        Notes
+        -----
+        The mesh parameters (ax, ay, az, nx, ny, nz) should be set based on
+        the fort.10 files, but this is not yet implemented.
         """
         convertfort10_default_file = os.path.join(
             pyturbo_data_dir, "convertfort10", "convertfort10.input"
@@ -147,12 +219,17 @@ class Convertfort10(FortranIO):
     @staticmethod
     def read_namelist_from_file(file: str):  # -> namelist
         """
-        Read namelist values from a specified file
+        Read namelist values from a specified file.
 
-        Args:
-            file (str): filename
-        Returns:
-            Namelist: namelist values read from the specified file
+        Parameters
+        ----------
+        file : str
+            Path to the input file.
+
+        Returns
+        -------
+        Namelist
+            Namelist object with parameter values from the file.
         """
         namelist = Namelist.parse_namelist_from_file(file)
         return namelist
@@ -162,13 +239,19 @@ class Convertfort10(FortranIO):
         cls, in_fort10: str = "fort.10_in", out_fort10: str = "fort.10_out"
     ):  # -> cls
         """
-        Read default namelist values from turbogenius database
+        Create a Convertfort10 instance with default namelist values.
 
-        Args:
-            in_fort10 (str): input fort.10
-            out_fort10 (str): template fort.10
-        Returns:
-            cls: cls with default namelist values taken from the database
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10_in".
+        out_fort10 : str, optional
+            Output fort.10 wavefunction file (template), by default "fort.10_out".
+
+        Returns
+        -------
+        Convertfort10
+            Convertfort10 instance with default namelist values.
         """
         namelist = cls.read_default_namelist(in_fort10=in_fort10, out_fort10=out_fort10)
         return cls(in_fort10=in_fort10, out_fort10=out_fort10, namelist=namelist)
@@ -181,14 +264,21 @@ class Convertfort10(FortranIO):
         out_fort10: str = "fort.10_out",
     ):  # -> cls
         """
-        Read namelist values from a specified file
+        Create a Convertfort10 instance from a namelist file.
 
-        Args:
-            file (str): filename
-            in_fort10 (str): input fort.10
-            out_fort10 (str): template fort.10
-        Returns:
-            cls: cls with namelist values read from the specified file
+        Parameters
+        ----------
+        file : str
+            Path to the input file.
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10_in".
+        out_fort10 : str, optional
+            Output fort.10 wavefunction file (template), by default "fort.10_out".
+
+        Returns
+        -------
+        Convertfort10
+            Convertfort10 instance with namelist values from the file.
         """
         namelist = Namelist.parse_namelist_from_file(file)
         return cls(in_fort10=in_fort10, out_fort10=out_fort10, namelist=namelist)

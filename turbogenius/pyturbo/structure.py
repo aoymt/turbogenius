@@ -35,12 +35,89 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 class Cell:
+    """
+    Class for representing unit cell vectors.
+
+    This class handles unit cell information including lattice vectors,
+    cell parameters (celldm), and periodic boundary conditions.
+
+    Parameters
+    ----------
+    vec_a : list, optional
+        Lattice vector a in Bohr units. If None, defaults to [0.0, 0.0, 0.0],
+        by default None.
+    vec_b : list, optional
+        Lattice vector b in Bohr units. If None, defaults to [0.0, 0.0, 0.0],
+        by default None.
+    vec_c : list, optional
+        Lattice vector c in Bohr units. If None, defaults to [0.0, 0.0, 0.0],
+        by default None.
+
+    Attributes
+    ----------
+    vec_a : numpy.ndarray
+        Lattice vector a in Bohr units.
+    vec_b : numpy.ndarray
+        Lattice vector b in Bohr units.
+    vec_c : numpy.ndarray
+        Lattice vector c in Bohr units.
+    norm_vec_a : float
+        Norm of lattice vector a.
+    norm_vec_b : float
+        Norm of lattice vector b.
+    norm_vec_c : float
+        Norm of lattice vector c.
+    pbc_flag : bool
+        Periodic boundary conditions flag.
+    has_celldm : bool
+        Flag indicating if celldm parameters can be defined.
+    tilted_flag : bool
+        Flag indicating if the unit cell is tilted (non-orthorhombic).
+    celldm_1 : float
+        Cell parameter 1 (norm of a).
+    celldm_2 : float
+        Cell parameter 2 (b/a ratio).
+    celldm_3 : float
+        Cell parameter 3 (c/a ratio).
+    celldm_4 : float
+        Cell parameter 4 (alpha angle in radians).
+    celldm_5 : float
+        Cell parameter 5 (beta angle in radians).
+    celldm_6 : float
+        Cell parameter 6 (gamma angle in radians).
+
+    Notes
+    -----
+    TurboRVB assumes that vec_a is on the x-axis, i.e., vec_a = [a, 0.0, 0.0].
+    If this is not the case, has_celldm will be False.
+    """
+
     def __init__(
         self,
         vec_a: Optional[list] = None,
         vec_b: Optional[list] = None,
         vec_c: Optional[list] = None,
     ):
+        """
+        Initialize the Cell class.
+
+        Parameters
+        ----------
+        vec_a : list, optional
+            Lattice vector a in Bohr units. If None, defaults to [0.0, 0.0, 0.0],
+            by default None.
+        vec_b : list, optional
+            Lattice vector b in Bohr units. If None, defaults to [0.0, 0.0, 0.0],
+            by default None.
+        vec_c : list, optional
+            Lattice vector c in Bohr units. If None, defaults to [0.0, 0.0, 0.0],
+            by default None.
+
+        Notes
+        -----
+        The cell parameters (celldm) are automatically calculated from the
+        lattice vectors. If all vectors are zero, pbc_flag is set to False.
+        """
         if vec_a is None:
             vec_a = [0.0, 0.0, 0.0]  # bohr
         if vec_b is None:
@@ -316,6 +393,50 @@ class Cell:
 
 
 class Structure:
+    """
+    Class for representing atomic structures.
+
+    This class handles atomic structure information including unit cell,
+    atomic positions, and element information.
+
+    Parameters
+    ----------
+    cell : Cell, optional
+        Cell object containing unit cell information. If None, an empty
+        Cell is created, by default None.
+    atomic_numbers : list, optional
+        List of atomic numbers. If None, an empty list is created,
+        by default None.
+    element_symbols : list, optional
+        List of element symbols. If None, an empty list is created,
+        by default None.
+    positions : numpy.ndarray, optional
+        Atomic positions in Cartesian coordinates (3 x N matrix) in Bohr units.
+        If None, an empty array is created, by default None.
+
+    Attributes
+    ----------
+    cell : Cell
+        Cell object containing unit cell information.
+    atomic_numbers : list
+        List of atomic numbers.
+    element_symbols : list
+        List of element symbols.
+    positions : numpy.ndarray
+        Atomic positions in Cartesian coordinates (3 x N matrix) in Bohr units.
+    natom : int
+        Number of atoms.
+    has_celldm : bool
+        Flag indicating if celldm parameters can be defined (from Cell).
+    positions_frac : numpy.ndarray
+        Atomic positions in fractional coordinates.
+
+    Notes
+    -----
+    Positions are always stored in Cartesian coordinates in Bohr units.
+    Fractional coordinates are computed on-the-fly when needed.
+    """
+
     def __init__(
         self,
         cell: Optional[Cell] = None,
@@ -323,6 +444,24 @@ class Structure:
         element_symbols: Optional[list] = None,
         positions: Optional[np.ndarray] = None,  # 3 * N matrix, the unit is bohr!!
     ):
+        """
+        Initialize the Structure class.
+
+        Parameters
+        ----------
+        cell : Cell, optional
+            Cell object containing unit cell information. If None, an empty
+            Cell is created, by default None.
+        atomic_numbers : list, optional
+            List of atomic numbers. If None, an empty list is created,
+            by default None.
+        element_symbols : list, optional
+            List of element symbols. If None, an empty list is created,
+            by default None.
+        positions : numpy.ndarray, optional
+            Atomic positions in Cartesian coordinates (3 x N matrix) in Bohr units.
+            If None, an empty array is created, by default None.
+        """
         if cell is None:
             cell = Cell()
         if atomic_numbers is None:

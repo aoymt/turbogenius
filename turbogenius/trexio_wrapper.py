@@ -24,15 +24,80 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 class Trexio_wrapper_r:
     """
+    Wrapper class for reading TREXIO files.
 
-    This class is a wrapper for the TREXIO program
+    This class provides a convenient interface to read and access data from
+    TREXIO files, including structure information, basis sets, molecular
+    orbitals, and pseudo potentials.
 
-    Attributes:
-         trexio_file (str): name of TREXIO file
+    Parameters
+    ----------
+    trexio_file : str
+        Name of the TREXIO file to read.
 
+    Attributes
+    ----------
+    trexio_file : str
+        Name of the TREXIO file.
+    periodic : bool
+        Whether the system uses periodic boundary conditions.
+    cell_a : list
+        First lattice vector (if periodic).
+    cell_b : list
+        Second lattice vector (if periodic).
+    cell_c : list
+        Third lattice vector (if periodic).
+    k_point : list
+        k-point coordinates (if periodic).
+    num_ele_up : int
+        Number of spin-up electrons.
+    num_ele_dn : int
+        Number of spin-down electrons.
+    num_ele_total : int
+        Total number of electrons.
+    nucleus_num_r : int
+        Number of nuclei.
+    labels_r : list
+        Nuclear labels.
+    charges_r : list
+        Nuclear charges.
+    coords_r : numpy.ndarray
+        Nuclear coordinates.
+    basis_type : str
+        Type of basis set.
+    ao_num : int
+        Number of atomic orbitals.
+    mo_num : int
+        Number of molecular orbitals.
+    complex_flag : bool
+        Whether the wavefunction is complex.
+
+    Notes
+    -----
+    The class automatically detects whether the system is periodic or molecular
+    and reads the appropriate information. For periodic systems, it also reads
+    k-point information if available.
+
+    Examples
+    --------
+    >>> wrapper = Trexio_wrapper_r("diamond_single_k.hdf5")
+    >>> print(wrapper.num_ele_total)
     """
 
     def __init__(self, trexio_file: str):
+        """
+        Initialize the TREXIO wrapper and read the file.
+
+        Parameters
+        ----------
+        trexio_file : str
+            Name of the TREXIO file to read.
+
+        Raises
+        ------
+        trexio.Error
+            If the TREXIO file cannot be read or required data is missing.
+        """
         # prefix and file names
         logger.info(f"TREXIO file = {trexio_file}")
 

@@ -31,35 +31,82 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 class LRDMCopt_genius(GeniusIO):
     """
+    Wrapper class for pyturbo LRDMCopt (LRDMC optimization) functionality.
 
-    This class is a wrapper of pyturbo LRDMCopt class
+    This class provides a high-level interface to optimize wavefunction
+    parameters using LRDMC, with support for various optimization strategies
+    and parameter types.
 
-    Attributes:
-         fort10 (str): fort.10 WF file
-         lrdmcoptsteps (int): total number of optimization steps
-         steps (int): number of MCMC steps per optimization step
-         bin_block (int): binning length
-         warmupblocks (int): the number of disregarded blocks,
-         num_walkers (int): The number of walkers, -1 (default) = the number of MPI processes
-         maxtime (int): Maxtime (sec.)
-         optimizer (str): Choose optimizer, selected from sr:stochastic reconfiguration or lr:linear method.
-         learning_rate (float): optimization step size, default values=sr:0.05, lr:0.35
-         regularization (float): regularization parameter
-         num_opt_param (int): the number of optimized parameters. 0 means all the parameters are optimized.
-         alat (float): Lattice space (Bohr)
-         time_branching (float): interval between two branching steps (a.u.)
-         etry (float): Trial Energy (Ha)
-         nonlocalmoves (str): Treatment of locality approximation, choose from "tmove", "dla", "dlatm"
-         opt_onebody (bool): flag to optimize onebody Jastrow
-         opt_twobody (bool): flag to optimize twobody Jastrow
-         opt_det_mat (bool): flag to optimize matrix elements in the determinant part
-         opt_jas_mat (bool): flag to optimize matrix elements in the Jastrow part
-         opt_det_basis_exp (bool): flag to optimize exponents of the determinant basis sets
-         opt_jas_basis_exp (bool): flag to optimize exponents of the Jastrow basis sets
-         opt_det_basis_coeff (bool): flag to optimize coefficients of the determinant basis sets
-         opt_jas_basis_coeff (bool): flag to optimize coefficients of the Jastrow basis sets
-         twist_average (bool): Twist average flag, True or False
-         kpoints (list): k Monkhorst-Pack grids, [kx,ky,kz,nx,ny,nz], kx,y,z-> grids, nx,y,z-> shift=0, noshift=1.
+    Parameters
+    ----------
+    fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10".
+    lrdmcoptsteps : int, optional
+        Total number of optimization steps, by default 100.
+    steps : int, optional
+        Number of MCMC steps per optimization step, by default 10.
+    bin_block : int, optional
+        Binning length, by default 1.
+    warmupblocks : int, optional
+        Number of disregarded blocks, by default 1.
+    num_walkers : int, optional
+        Number of walkers. If -1, uses the number of MPI processes,
+        by default -1.
+    maxtime : int, optional
+        Maximum time in seconds, by default 172800.
+    optimizer : str, optional
+        Optimizer choice: "sr" (stochastic reconfiguration) or "lr" (linear method),
+        by default "sr".
+    learning_rate : float, optional
+        Optimization step size. Default values: sr:0.05, lr:0.35, by default 0.02.
+    regularization : float, optional
+        Regularization parameter, by default 0.001.
+    num_opt_param : int, optional
+        Number of optimized parameters. 0 means all parameters are optimized,
+        by default 0.
+    alat : float, optional
+        Lattice space in Bohr, by default -0.20.
+    time_branching : float, optional
+        Interval between two branching steps in atomic units, by default 0.10.
+    etry : float, optional
+        Trial energy in Hartree, by default 0.0.
+    nonlocalmoves : str, optional
+        Treatment of locality approximation. Choose from "tmove", "dla", "dlatm",
+        by default "dla".
+    opt_onebody : bool, optional
+        Flag to optimize one-body Jastrow, by default True.
+    opt_twobody : bool, optional
+        Flag to optimize two-body Jastrow, by default True.
+    opt_det_mat : bool, optional
+        Flag to optimize matrix elements in the determinant part, by default False.
+    opt_jas_mat : bool, optional
+        Flag to optimize matrix elements in the Jastrow part, by default True.
+    opt_det_basis_exp : bool, optional
+        Flag to optimize exponents of the determinant basis sets, by default False.
+    opt_jas_basis_exp : bool, optional
+        Flag to optimize exponents of the Jastrow basis sets, by default False.
+    opt_det_basis_coeff : bool, optional
+        Flag to optimize coefficients of the determinant basis sets, by default False.
+    opt_jas_basis_coeff : bool, optional
+        Flag to optimize coefficients of the Jastrow basis sets, by default False.
+    twist_average : bool, optional
+        Twist average flag, True or False, by default False.
+    kpoints : list, optional
+        k Monkhorst-Pack grids, [kx,ky,kz,nx,ny,nz], where kx,y,z are grids
+        and nx,y,z are shift (0) or no shift (1), by default [1, 1, 1, 0, 0, 0].
+
+    Attributes
+    ----------
+    fort10 : str
+        Input fort.10 wavefunction file.
+    lrdmcopt : LRDMCopt
+        Underlying pyturbo LRDMCopt instance.
+    energy : float or None
+        Energy value (set after calculation).
+    energy_error : float or None
+        Energy error (set after calculation).
+    estimated_time_for_1_generation : float or None
+        Estimated time for one generation (set after calculation).
     """
 
     def __init__(
@@ -302,12 +349,17 @@ class LRDMCopt_genius(GeniusIO):
         """
         Generate input files and run the command.
 
-        Args:
-            cont (bool): if True, continuation run (i.e., iopt=0), if False, starting from scratch (i.e., iopt=1).
-            input_name (str): input file name
-            output_name (str): output file name
-            average_parameters (bool): if True, average the optimized parameters
-
+        Parameters
+        ----------
+        cont : bool, optional
+            If True, continuation run (i.e., iopt=0). If False, starting from
+            scratch (i.e., iopt=1), by default False.
+        input_name : str, optional
+            Input file name, by default "datasfn_opt.input".
+        output_name : str, optional
+            Output file name, by default "out_fn_opt".
+        average_parameters : bool, optional
+            If True, average the optimized parameters, by default True.
         """
         self.generate_input(cont=cont, input_name=input_name)
         self.run(input_name=input_name, output_name=output_name)
@@ -320,10 +372,13 @@ class LRDMCopt_genius(GeniusIO):
         """
         Generate input file.
 
-        Args:
-            cont (bool): if True, continuation run (i.e., iopt=0), if False, starting from scratch (i.e., iopt=1).
-            input_name (str): input file name
-
+        Parameters
+        ----------
+        cont : bool, optional
+            If True, continuation run (i.e., iopt=0). If False, starting from
+            scratch (i.e., iopt=1), by default False.
+        input_name : str, optional
+            Input file name, by default "datasfn_opt.input".
         """
         io_fort10 = IO_fort10(fort10=self.fort10)
         io_fort10.io_flag = 0
@@ -339,9 +394,17 @@ class LRDMCopt_genius(GeniusIO):
         """
         Run the command.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "datasfn_opt.input".
+        output_name : str, optional
+            Output file name, by default "out_fn_opt".
+
+        Raises
+        ------
+        AssertionError
+            If the calculation does not complete successfully.
         """
         self.lrdmcopt.run(input_name=input_name, output_name=output_name)
         flags = self.lrdmcopt.check_results(output_names=[output_name])
@@ -349,10 +412,16 @@ class LRDMCopt_genius(GeniusIO):
 
     def store_result(self, output_names: Optional[list] = None) -> None:
         """
-        Store results. energy, energy_error, and estimated_time_for_1_generation are stored in this class.
+        Store results.
 
-        Args:
-            output_names (list): a list of output file names
+        Energy, energy_error, and estimated_time_for_1_generation are stored
+        in this class.
+
+        Parameters
+        ----------
+        output_names : list, optional
+            A list of output file names. If None, defaults to ["out_fn_opt"],
+            by default None.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -367,11 +436,15 @@ class LRDMCopt_genius(GeniusIO):
         interactive: bool = True,
     ):
         """
-        plot energy and devmax
+        Plot energy and devmax.
 
-        Args:
-            output_names (list): a list of output file names
-            interactive (bool): flag for an interactive plot
+        Parameters
+        ----------
+        output_names : list, optional
+            A list of output file names. If None, defaults to ["out_fn_opt"],
+            by default None.
+        interactive : bool, optional
+            Flag for an interactive plot, by default True.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -387,13 +460,24 @@ class LRDMCopt_genius(GeniusIO):
         output_names: Optional[list] = None,
     ) -> None:
         """
-        Average parameters of fort.10
+        Average parameters of fort.10.
 
-        Args:
-            optwarmupblocks (int): the number of disregarded optimization steps
-            input_name (str): the input file used in the latest calculation
-            output_names (list): a list of output file names
-            graph_plot (bool): Flag for plotting a graph
+        Parameters
+        ----------
+        optwarmupsteps : int, optional
+            Number of disregarded optimization steps, by default 10.
+        graph_plot : bool, optional
+            Flag for plotting a graph, by default False.
+        input_name : str, optional
+            Input file used in the latest calculation, by default "datasfn_opt.input".
+        output_names : list, optional
+            A list of output file names. If None, defaults to ["out_fn_opt"],
+            by default None.
+
+        Raises
+        ------
+        AssertionError
+            If the calculation does not complete successfully.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -407,13 +491,18 @@ class LRDMCopt_genius(GeniusIO):
 
     def get_energy(self, output_names: Optional[list] = None) -> list:
         """
-        return energy list
+        Get energy list.
 
-        Args:
-            output_names (list): a list of output file names
+        Parameters
+        ----------
+        output_names : list, optional
+            A list of output file names. If None, defaults to ["out_fn_opt"],
+            by default None.
 
-        Return:
-            list: a list of history of energies.
+        Returns
+        -------
+        list
+            A list of history of energies.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -423,13 +512,18 @@ class LRDMCopt_genius(GeniusIO):
         self, output_names: Optional[list] = None
     ) -> float:
         """
-        This procedure stores estimated_time_for_1_generation.
+        Get estimated time for one generation.
 
-        Args:
-            output_names (list): a list of output file names
+        Parameters
+        ----------
+        output_names : list, optional
+            A list of output file names. If None, defaults to ["out_fn_opt"],
+            by default None.
 
-        Return:
-            float: estimated_time_for_1_generation.
+        Returns
+        -------
+        float
+            Estimated time for one generation.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -441,10 +535,17 @@ class LRDMCopt_genius(GeniusIO):
         """
         Check the result.
 
-        Args:
-            output_names (list): a list of output file names
-        Returns:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        output_names : list, optional
+            A list of output file names to check. If None, defaults to
+            ["out_fn_opt"], by default None.
+
+        Returns
+        -------
+        bool
+            True if all the runs were successful, False if an error is
+            detected in the files.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -452,10 +553,12 @@ class LRDMCopt_genius(GeniusIO):
 
     def plot_parameters_history(self, interactive: bool = True) -> None:
         """
-        plot history of optimized variational parameters
+        Plot history of optimized variational parameters.
 
-        Args:
-            interactive (bool): flag for an interactive plot
+        Parameters
+        ----------
+        interactive : bool, optional
+            Flag for an interactive plot, by default True.
         """
         self.lrdmcopt.plot_parameters_history(interactive=interactive)
 

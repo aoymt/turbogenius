@@ -27,13 +27,25 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 class Convertfort10mol(FortranIO):
     """
+    Wrapper class for TurboRVB convertfort10mol.x program.
 
-    This class is a wrapper of turborvb convertfort10mol.x
+    This class provides an interface to convert fort.10 wavefunction files
+    to molecular orbital format, with options to add random molecular orbitals.
 
-    Attributes:
-         in_fort10 (str): input fort.10
-         namelist (Namelist): fortran namelist for convertfort10mol.x
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10_in".
+    namelist : Namelist, optional
+        Namelist object containing program parameters. If None, an empty
+        Namelist is created, by default None.
 
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    namelist : Namelist
+        Namelist object containing program parameters.
     """
 
     def __init__(
@@ -41,6 +53,22 @@ class Convertfort10mol(FortranIO):
         in_fort10: str = "fort.10_in",
         namelist: Optional[Namelist] = None,
     ):
+        """
+        Initialize the Convertfort10mol class.
+
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10_in".
+        namelist : Namelist, optional
+            Namelist object containing program parameters. If None, an empty
+            Namelist is created, by default None.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the fort.10 file or pseudo.dat (if needed) is not found.
+        """
         if namelist is None:
             namelist = Namelist()
 
@@ -55,21 +83,35 @@ class Convertfort10mol(FortranIO):
             file_check("pseudo.dat")
 
     def __str__(self) -> str:
+        """
+        Return string representation of the Convertfort10mol object.
+
+        Returns
+        -------
+        str
+            String description of the object.
+        """
         return str(f"{self.__class__.__name__} class")
 
     def sanity_check(self) -> None:
         """
-        Sanity check (to be implemented.)
+        Perform sanity checks on the input parameters.
 
+        Notes
+        -----
+        This method is a placeholder and does nothing. It should be
+        implemented to validate input parameters.
         """
         pass
 
     def generate_input(self, input_name: str = "convertfort10mol.input") -> None:
         """
-        Generate input file.
+        Generate input file for the convertfort10mol program.
 
-        Args:
-            input_name (str): input file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Output input file name, by default "convertfort10mol.input".
         """
         self.namelist.write(input_name)
         logger.info(f"{input_name} has been generated.")
@@ -80,11 +122,19 @@ class Convertfort10mol(FortranIO):
         output_name: str = "out_mol",
     ) -> None:
         """
-        Run the command.
+        Run the convertfort10mol program.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "convertfort10mol.input".
+        output_name : str, optional
+            Output file name, by default "out_mol".
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            If the program execution fails.
         """
         run(
             turbo_convertfort10mol_run_command,
@@ -94,12 +144,19 @@ class Convertfort10mol(FortranIO):
 
     def check_results(self, output_names: Optional[list] = None) -> list:
         """
-        Check the result.
+        Check the results of the convertfort10mol program execution.
 
-        Args:
-            output_names (list): a list of output file names
-        Returns:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        output_names : list, optional
+            List of output file names to check. If None, defaults to
+            ["out_mol"], by default None.
+
+        Returns
+        -------
+        list of bool
+            List of boolean flags indicating success for each output file.
+            True if the file contains "Time.*change.*fort\.10", False otherwise.
         """
         if output_names is None:
             output_names = ["out_mol"]
@@ -117,12 +174,24 @@ class Convertfort10mol(FortranIO):
     @staticmethod
     def read_default_namelist(in_fort10: str = "fort.10_in"):
         """
-        Read default namelist values from turbogenius database
+        Read default namelist values from the turbogenius database.
 
-        Args:
-            in_fort10 (str): input fort.10
-        Returns:
-            Namelist: default namelist values taken from the database
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 file. The number of molecular orbitals (nmol) is
+            automatically set based on this file, by default "fort.10_in".
+
+        Returns
+        -------
+        Namelist
+            Namelist object with default parameter values. The "nmol" parameter
+            in the "&molec_info" namelist is set to nel/2 from the fort.10 file.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the fort.10 file is not found.
         """
         convertfort10mol_default_file = os.path.join(
             pyturbo_data_dir, "convertfort10mol", "convertfort10mol.input"
@@ -136,12 +205,17 @@ class Convertfort10mol(FortranIO):
     @staticmethod
     def read_namelist_from_file(file: str):
         """
-        Read namelist values from a specified file
+        Read namelist values from a specified file.
 
-        Args:
-            file (str): filename
-        Returns:
-            Namelist: namelist values read from the specified file
+        Parameters
+        ----------
+        file : str
+            Path to the input file.
+
+        Returns
+        -------
+        Namelist
+            Namelist object with parameter values from the file.
         """
         namelist = Namelist.parse_namelist_from_file(file)
         return namelist
@@ -149,12 +223,17 @@ class Convertfort10mol(FortranIO):
     @classmethod
     def parse_from_default_namelist(cls, in_fort10: str = "fort.10_in"):
         """
-        Read default namelist values from turbogenius database
+        Create a Convertfort10mol instance with default namelist values.
 
-        Args:
-            in_fort10 (str): input fort.10
-        Returns:
-            cls: cls with default namelist values taken from the database
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10_in".
+
+        Returns
+        -------
+        Convertfort10mol
+            Convertfort10mol instance with default namelist values.
         """
         namelist = cls.read_default_namelist(in_fort10=in_fort10)
         return cls(in_fort10=in_fort10, namelist=namelist)
@@ -162,13 +241,19 @@ class Convertfort10mol(FortranIO):
     @classmethod
     def parse_from_file(cls, file: str, in_fort10: str = "fort.10_in"):
         """
-        Read namelist values from a specified file
+        Create a Convertfort10mol instance from a namelist file.
 
-        Args:
-            file (str): filename
-            in_fort10 (str): input fort.10
-        Returns:
-            cls: cls with namelist values read from the specified file
+        Parameters
+        ----------
+        file : str
+            Path to the input file.
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10_in".
+
+        Returns
+        -------
+        Convertfort10mol
+            Convertfort10mol instance with namelist values from the file.
         """
         namelist = Namelist.parse_namelist_from_file(file)
         return cls(in_fort10=in_fort10, namelist=namelist)

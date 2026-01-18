@@ -38,29 +38,70 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 class Makefort10_genius(GeniusIO):
     """
+    Wrapper class for pyturbo makefort10 functionality.
 
-    This class is a wrapper of pyturbo makefort10 class
+    This class provides a high-level interface to generate fort.10 wavefunction
+    files from structure files, with support for various basis sets, pseudo
+    potentials, and wavefunction types.
 
-    Attributes:
-         structure_file (str): File name of the input structure, formats suppored by ASE are supported.
-         supercell (list):  3 integers, supercell sizes [x,y,z]
-         det_basis_set (str or list): basis set for the determinant part: e.g., "cc-pVQZ" (str), a list of gamess format basis sets is accepatable.
-         jas_basis_set (str or list): basis set for the Jastrow part: e.g., "cc-pVQZ" (str), a list of gamess format basis sets is accepatable.
-         det_contracted_flag (bool): if True determinant basis set is contracted, if False determinant basis set is uncontracted.
-         jas_contracted_flag (bool): if True Jastrow basis set is contracted, if False Jastrow basis set is uncontracted.
-         all_electron_jas_basis_set (bool): if True Jastrow basis set is read from the specified all-electron basis, if False, pseudo potential ones.
-         pseudo_potential (str, list or None): if None, all-electron calculations, if "str", the corresponding PP is read from the database.
-         det_cut_basis_option (bool): if True, determinant basis set is cut according to the Andrea Zen's procedure.
-         jas_cut_basis_option (bool): if True, Jastrow basis set is cut according to the Andrea Zen's procedure.
-         det_exp_to_discard (float): determinant basis set whose exponents smaller than "det_exp_to_discard" are disregarded
-         jastrow_type (int): One- and Two- Jastrow type specified.
-         jastrow_4body (bool): Flag for activating 4-body Jastrow components in the 3body Jastrow.
-         complex (bool): if True, the WF is complex, if False, the WF is real.
-         phase_up (list): 3-float numbers for the up-phase [x, y, z].
-         phase_dn (list): 3-float numbers for the dn-phase [x, y, z].
-         same_phase_up_dn (bool): forced phase up == phase dn (valid only for gamma point.) it is automatically detected for other points.
-         neldiff (int): The number of difference between up and dn electrons.
-         symmetry (bool): if false, nosym=.true., meaning that no symmetry is used.
+    Parameters
+    ----------
+    structure_file : str
+        File name of the input structure. Formats supported by ASE are supported.
+    supercell : list, optional
+        3 integers, supercell sizes [x, y, z], by default [1, 1, 1].
+    det_basis_set : str or list, optional
+        Basis set for the determinant part. Can be a string (e.g., "cc-pVQZ")
+        or a list of GAMESS format basis sets, by default "cc-pVQZ".
+    jas_basis_set : str or list, optional
+        Basis set for the Jastrow part. Can be a string (e.g., "cc-pVQZ")
+        or a list of GAMESS format basis sets, by default "cc-pVQZ".
+    det_contracted_flag : bool, optional
+        If True, determinant basis set is contracted. If False, uncontracted,
+        by default True.
+    jas_contracted_flag : bool, optional
+        If True, Jastrow basis set is contracted. If False, uncontracted,
+        by default True.
+    all_electron_jas_basis_set : bool, optional
+        If True, Jastrow basis set is read from the specified all-electron basis.
+        If False, pseudo potential ones, by default True.
+    pseudo_potential : str, list, or None, optional
+        If None, all-electron calculations. If str, the corresponding PP is read
+        from the database, by default None.
+    det_cut_basis_option : bool, optional
+        If True, determinant basis set is cut according to Andrea Zen's procedure,
+        by default False.
+    jas_cut_basis_option : bool, optional
+        If True, Jastrow basis set is cut according to Andrea Zen's procedure,
+        by default False.
+    det_exp_to_discard : float, optional
+        Determinant basis set whose exponents smaller than this value are
+        disregarded, by default 0.00.
+    jastrow_type : int, optional
+        One- and two-body Jastrow type specified, by default -6.
+    jastrow_4body : bool, optional
+        Flag for activating 4-body Jastrow components in the 3-body Jastrow,
+        by default False.
+    complex : bool, optional
+        If True, the wavefunction is complex. If False, real, by default False.
+    phase_up : list, optional
+        3-float numbers for the up-phase [x, y, z], by default [0.0, 0.0, 0.0].
+    phase_dn : list, optional
+        3-float numbers for the dn-phase [x, y, z], by default [0.0, 0.0, 0.0].
+    same_phase_up_dn : bool, optional
+        Forced phase up == phase dn (valid only for gamma point). It is
+        automatically detected for other points, by default False.
+    neldiff : int, optional
+        Number of difference between up and dn electrons, by default 0.
+    symmetry : bool, optional
+        If False, nosym=.true., meaning that no symmetry is used, by default True.
+
+    Attributes
+    ----------
+    structure_file : str
+        File name of the input structure.
+    makefort10 : Makefort10
+        Underlying pyturbo Makefort10 instance.
     """
 
     def __init__(

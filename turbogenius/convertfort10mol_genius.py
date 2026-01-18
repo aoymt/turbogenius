@@ -29,14 +29,35 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 class Convertfort10mol_genius(GeniusIO):
     """
+    Wrapper class for pyturbo convertfort10mol functionality.
 
-    This class is a wrapper of pyturbo convertfortmol class
+    This class provides a high-level interface to convert fort.10 wavefunction
+    files to molecular orbital format, with options to add random molecular
+    orbitals.
 
-    Attributes:
-         fort10 (str): input fort.10 WF file
-         add_random_mo (bool): flag to add random MOs
-         additional_mo (int): The number of added MOs
-         grid_size (float): grid size for x,y,z (Bohr)
+    Parameters
+    ----------
+    fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10_in".
+    add_random_mo : bool, optional
+        If True, add random molecular orbitals, by default True.
+    grid_size : float, optional
+        Grid size for x, y, z in Bohr, by default 0.10.
+    additional_mo : int, optional
+        Number of additional molecular orbitals to add, by default 0.
+
+    Attributes
+    ----------
+    fort10 : str
+        Input fort.10 wavefunction file.
+    grid_size : float
+        Grid size for x, y, z in Bohr.
+    convertfort10mol : Convertfort10mol
+        Underlying pyturbo Convertfort10mol instance.
+    io_fort10 : IO_fort10
+        IO_fort10 instance for reading fort.10 files.
+    energy : float or None
+        Energy value (set after calculation).
     """
 
     def __init__(
@@ -141,10 +162,12 @@ class Convertfort10mol_genius(GeniusIO):
         """
         Generate input files and run the command.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
-
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "convertfort10mol.input".
+        output_name : str, optional
+            Output file name, by default "out_mol".
         """
         self.generate_input(input_name=input_name)
         self.run(input_name=input_name, output_name=output_name)
@@ -155,9 +178,10 @@ class Convertfort10mol_genius(GeniusIO):
         """
         Generate input file.
 
-        Args:
-            input_name (str): input file name
-
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "convertfort10mol.input".
         """
         self.convertfort10mol.generate_input(input_name=input_name)
 
@@ -169,9 +193,17 @@ class Convertfort10mol_genius(GeniusIO):
         """
         Run the command.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "convertfort10mol.input".
+        output_name : str, optional
+            Output file name, by default "out_mol".
+
+        Raises
+        ------
+        AssertionError
+            If the calculation does not complete successfully.
         """
         self.convertfort10mol.run(
             input_name=input_name, output_name=output_name
@@ -183,10 +215,17 @@ class Convertfort10mol_genius(GeniusIO):
         """
         Check the result.
 
-        Args:
-            output_names (list): a list of output file names
-        Return:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        output_names : list, optional
+            A list of output file names to check. If None, defaults to
+            ["out_mol"], by default None.
+
+        Returns
+        -------
+        bool
+            True if all the runs were successful, False if an error is
+            detected in the files.
         """
         if output_names is None:
             output_names = ["out_mol"]

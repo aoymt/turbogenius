@@ -44,6 +44,18 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 # Thanks Oto :-)) by Kosuke Nakano
 class OptionEatAll(click.Option):
+    """
+    Custom Click option class that accepts multiple values.
+
+    This class extends click.Option to allow an option to consume all
+    remaining arguments until the next option is encountered.
+
+    Notes
+    -----
+    This is useful for options that need to accept a variable number of
+    arguments, such as lists of files or parameters.
+    """
+
     def __init__(self, *args, **kwargs):
         self.save_other_options = kwargs.pop("save_other_options", True)
         nargs = kwargs.pop("nargs", -1)
@@ -86,6 +98,27 @@ class OptionEatAll(click.Option):
 
 
 def header(f):
+    """
+    Decorator for setting up logging for CLI commands.
+
+    This decorator adds a log level option to CLI commands and configures
+    the logger with the specified level.
+
+    Parameters
+    ----------
+    f : callable
+        The function to be decorated (a Click command).
+
+    Returns
+    -------
+    callable
+        Decorated function with logging setup.
+
+    Notes
+    -----
+    The decorator adds a `-log` option that accepts "DEBUG", "INFO", or "ERROR"
+    as log levels. The default is "INFO".
+    """
     @click.option(
         "-log",
         "log_level",
@@ -145,6 +178,24 @@ def header(f):
 
 
 def decorate_grpost(f):
+    """
+    Decorator for adding generate/run/postprocess options to CLI commands.
+
+    This decorator adds three boolean flags to CLI commands:
+    - `-g` or `--g`: Generate input files
+    - `-r` or `--r`: Run the calculation
+    - `-post` or `--post`: Postprocess results
+
+    Parameters
+    ----------
+    f : callable
+        The function to be decorated (a Click command).
+
+    Returns
+    -------
+    callable
+        Decorated function with generate/run/postprocess options.
+    """
     f = click.option("-g", "g", is_flag=True, help="Generate an input file")(f)
     f = click.option("-r", "r", is_flag=True, help="Run a program")(f)
     f = click.option("-post", "post", is_flag=True, help="Postprocess")(f)
@@ -153,6 +204,24 @@ def decorate_grpost(f):
 
 @click.group()
 def cli():
+    """
+    Turbo-Genius command-line interface.
+
+    This is the main entry point for the Turbo-Genius CLI. It provides
+    commands for various TurboRVB operations including wavefunction
+    generation, conversion, optimization, and QMC calculations.
+
+    Examples
+    --------
+    Run help to see available commands:
+        turbo-genius --help
+
+    Generate a wavefunction:
+        turbo-genius makefort10 structure.xyz
+
+    Run VMC calculation:
+        turbo-genius vmc fort.10
+    """
     """Turbo-Genius command-line tool"""
 
 
@@ -291,13 +360,56 @@ def makefort10(
     phasedn: list,
     neldiff: int,
 ) -> None:
-    """makefort10
+    """
+    Generate fort.10 wavefunction file from structure.
 
-    makefort10 class launched by turbogenius_cli
+    This command creates a TurboRVB wavefunction file (fort.10) from a
+    structure file using specified basis sets and pseudo potentials.
 
-        Args:
-            See Makefort10_genius arguments.
+    Parameters
+    ----------
+    g : bool
+        Flag to generate input files.
+    r : bool
+        Flag to run the calculation.
+    post : bool
+        Flag to postprocess results.
+    operation : bool
+        Operation string (comma-separated list of operations).
+    log_level : str
+        Logging level (DEBUG, INFO, ERROR).
+    structure_file : str
+        Path to the structure file (formats supported by ASE).
+    supercell : list
+        Supercell sizes [x, y, z].
+    det_basis_sets : str
+        Basis set for the determinant part.
+    jas_basis_sets : str
+        Basis set for the Jastrow part.
+    det_contracted_flag : bool
+        Flag for contracted determinant basis set.
+    jas_contracted_flag : bool
+        Flag for contracted Jastrow basis set.
+    all_electron_jas_basis_set : bool
+        Flag to use all-electron basis for Jastrow.
+    pseudo_potential : str or None
+        Pseudo potential database name (e.g., "ccECP", "BFD").
+    det_cut_basis_option : bool
+        Flag to cut determinant basis set.
+    jas_cut_basis_option : bool
+        Flag to cut Jastrow basis set.
+    complex : bool
+        Flag for complex wavefunction.
+    phaseup : list
+        Phase for up electrons [x, y, z].
+    phasedn : list
+        Phase for down electrons [x, y, z].
+    neldiff : int
+        Difference between up and down electrons.
 
+    Notes
+    -----
+    See Makefort10_genius class for detailed parameter descriptions.
     """
     pkl_name = "makefort10_genius_cli.pkl"
     root_dir = os.getcwd()

@@ -29,13 +29,53 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 class Namelist:
+    """
+    Class for managing Fortran namelist parameters.
+
+    This class provides functionality to read, write, and manipulate
+    Fortran namelist parameters used in TurboRVB input files.
+
+    Parameters
+    ----------
+    namelist : dict, optional
+        Dictionary containing namelist data. Keys are namelist names (e.g., "&simulation"),
+        values are dictionaries of parameter names and values, by default None.
+
+    Attributes
+    ----------
+    parameters : dict
+        Property to access the namelist dictionary.
+
+    Examples
+    --------
+    >>> namelist = Namelist()
+    >>> namelist.set_parameter("ngen", 100, "&simulation")
+    >>> namelist.write("input.inp")
+    """
+
     def __init__(self, namelist: dict = None):
+        """
+        Initialize the Namelist object.
+
+        Parameters
+        ----------
+        namelist : dict, optional
+            Dictionary containing namelist data, by default None.
+        """
         if namelist is None:
             namelist = dict()
         self.__namelist = namelist
 
     @property
     def parameters(self):
+        """
+        Get the namelist dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary containing all namelists and their parameters.
+        """
         return self.__namelist
 
     def set_parameter(
@@ -44,6 +84,30 @@ class Namelist:
         value: Union[int, float, str],
         namelist: Optional[str] = None,
     ):
+        """
+        Set a parameter value in the namelist.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to set.
+        value : int, float, or str
+            Parameter value.
+        namelist : str, optional
+            Namelist name (e.g., "&simulation"). If None, searches all namelists
+            for the parameter, by default None.
+
+        Returns
+        -------
+        bool
+            True if the parameter was set successfully.
+
+        Raises
+        ------
+        KeyError
+            If the parameter is not found in the namelist when namelist is None,
+            or if the specified namelist does not exist.
+        """
         if namelist is None:
             for key, parameters in self.__namelist.items():
                 if parameter in parameters.keys():
@@ -61,6 +125,26 @@ class Namelist:
                 raise KeyError
 
     def get_parameter(self, parameter, namelist=None):
+        """
+        Get a parameter value from the namelist.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to get.
+        namelist : str, optional
+            Namelist name. If None, searches all namelists, by default None.
+
+        Returns
+        -------
+        int, float, or str
+            Parameter value.
+
+        Raises
+        ------
+        ValueError
+            If the parameter is not found in the namelist.
+        """
         for key, parameters in self.__namelist.items():
             if namelist is not None and key != namelist:
                 continue
@@ -71,15 +155,50 @@ class Namelist:
         # return None
 
     def get_parameters(self):
+        """
+        Get all parameters from the namelist.
+
+        Returns
+        -------
+        dict
+            Dictionary containing all namelists and their parameters.
+        """
         return self.__namelist
 
     def comment_out(self, parameter):
+        """
+        Comment out a parameter in the namelist.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to comment out.
+
+        Notes
+        -----
+        This method removes the parameter from the active namelist and adds
+        it with a "!" prefix to comment it out. The original value is preserved.
+        """
         for key, parameters in self.__namelist.items():
             if parameter in parameters.keys():
                 value = self.__namelist[key].pop(parameter)
                 self.__namelist[key]["!" + parameter] = value
 
     def write(self, file_name):
+        """
+        Write the namelist to a file.
+
+        Parameters
+        ----------
+        file_name : str
+            Output file name.
+
+        Notes
+        -----
+        The file is written in Fortran namelist format with proper formatting.
+        String values are enclosed in single quotes, and boolean values are
+        written as ".true." or ".false.".
+        """
         output = []
 
         for key, parameters in self.__namelist.items():
@@ -101,6 +220,26 @@ class Namelist:
 
     @staticmethod
     def read_parameters_from_file(file_name):
+        """
+        Read parameters from a Fortran namelist file.
+
+        Parameters
+        ----------
+        file_name : str
+            Path to the input file.
+
+        Returns
+        -------
+        dict
+            Dictionary containing namelists and their parameters.
+            Keys are namelist names (e.g., "&simulation"), values are
+            dictionaries of parameter names and values.
+
+        Notes
+        -----
+        This method parses Fortran namelist format files, skipping comment
+        lines (starting with "!") and stopping at "ATOMIC_POSITIONS" if present.
+        """
         with open(file_name, "r") as f:
             input_lines = f.readlines()
 
@@ -140,6 +279,19 @@ class Namelist:
 
     @classmethod
     def parse_namelist_from_file(cls, file_name):
+        """
+        Create a Namelist instance from a file.
+
+        Parameters
+        ----------
+        file_name : str
+            Path to the input file.
+
+        Returns
+        -------
+        Namelist
+            Namelist instance with parameters read from the file.
+        """
         namelist_d_ordered = cls.read_parameters_from_file(file_name)
         return cls(namelist=namelist_d_ordered)
 

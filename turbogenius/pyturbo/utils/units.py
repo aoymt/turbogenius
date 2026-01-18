@@ -2,9 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
+Units module for pyturbo.
 
-pyturbo: units used in pyturbo
+This module defines unit conversion constants used in Turbo-Genius.
+Length is measured in Bohr, and energy is measured in Hartree (Ha).
 
+Units used in Turbo-Genius:
+- Length: Bohr (defined as 1.0)
+- Energy: Ha (defined as 1.0)
 """
 
 from __future__ import print_function
@@ -17,19 +22,24 @@ from logging import getLogger
 
 logger = getLogger("pyturbo").getChild(__name__)
 
-"""
-Units used in Turbo-Genius
-
-Lentgh: Bohr
-Energy: Ha
-
-are defined as 1.0
-"""
-
 # Length
 Bohr = 1.0
+"""
+float: Bohr unit (atomic unit of length), defined as 1.0.
+"""
+
 Angstrom = 1.0 / 0.529177210903  # Bohr
+"""
+float: Angstrom unit, converted from Bohr.
+"""
 
 # Energy
 Ha = 1.0
+"""
+float: Hartree unit (atomic unit of energy), defined as 1.0.
+"""
+
 Ry = 2.0  # Ha
+"""
+float: Rydberg unit, converted from Ha (1 Ry = 0.5 Ha).
+"""

@@ -41,6 +41,44 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 class Makefort10(FortranIO):
+    """
+    Wrapper class for TurboRVB makefort10 program.
+
+    This class provides an interface to generate fort.10 wavefunction files
+    from structure, basis sets, and pseudopotentials.
+
+    Parameters
+    ----------
+    structure : Structure, optional
+        Structure object containing atomic positions and cell information.
+        If None, an empty Structure is created, by default None.
+    det_basis_sets : Det_Basis_sets, optional
+        Determinant basis sets. If None, an empty Det_Basis_sets is created,
+        by default None.
+    jas_basis_sets : Jas_Basis_sets, optional
+        Jastrow basis sets. If None, an empty Jas_Basis_sets is created,
+        by default None.
+    pseudo_potentials : Pseudopotentials, optional
+        Pseudopotentials object. If None, an empty Pseudopotentials is created,
+        by default None.
+    namelist : Namelist, optional
+        Namelist object containing program parameters. If None, an empty
+        Namelist is created, by default None.
+
+    Attributes
+    ----------
+    structure : Structure
+        Structure object containing atomic positions and cell information.
+    det_basis_sets : Det_Basis_sets
+        Determinant basis sets.
+    jas_basis_sets : Jas_Basis_sets
+        Jastrow basis sets.
+    pseudo_potentials : Pseudopotentials
+        Pseudopotentials object.
+    namelist : Namelist
+        Namelist object containing program parameters.
+    """
+
     def __init__(
         self,
         structure: Optional[Structure] = None,
@@ -49,6 +87,27 @@ class Makefort10(FortranIO):
         pseudo_potentials: Optional[Pseudopotentials] = None,
         namelist: Optional[Namelist] = None,
     ):
+        """
+        Initialize the Makefort10 class.
+
+        Parameters
+        ----------
+        structure : Structure, optional
+            Structure object containing atomic positions and cell information.
+            If None, an empty Structure is created, by default None.
+        det_basis_sets : Det_Basis_sets, optional
+            Determinant basis sets. If None, an empty Det_Basis_sets is created,
+            by default None.
+        jas_basis_sets : Jas_Basis_sets, optional
+            Jastrow basis sets. If None, an empty Jas_Basis_sets is created,
+            by default None.
+        pseudo_potentials : Pseudopotentials, optional
+            Pseudopotentials object. If None, an empty Pseudopotentials is created,
+            by default None.
+        namelist : Namelist, optional
+            Namelist object containing program parameters. If None, an empty
+            Namelist is created, by default None.
+        """
         if structure is None:
             structure = Structure()
         if det_basis_sets is None:
@@ -70,16 +129,48 @@ class Makefort10(FortranIO):
         self.namelist = namelist
 
     def __str__(self):
+        """
+        Return string representation of the Makefort10 object.
 
+        Returns
+        -------
+        str
+            String description of the object.
+        """
         output = [
             "TurboRVB makefort10 python wrapper",
         ]
         return "\n".join(output)
 
     def sanity_check(self):
+        """
+        Perform sanity checks on the input parameters.
+
+        Raises
+        ------
+        AssertionError
+            If the number of atoms in the structure does not match the number
+            of nuclei in the determinant basis sets.
+        """
         assert self.structure.natom == self.det_basis_sets.nuclei_num
 
     def generate_input(self, input_name: str, basis_sets_unique_element: bool = True):
+        """
+        Generate input file for the makefort10 program.
+
+        Parameters
+        ----------
+        input_name : str
+            Output input file name.
+        basis_sets_unique_element : bool, optional
+            If True, uses unique basis sets per element. If False, allows
+            different basis sets for atoms of the same element, by default True.
+
+        Notes
+        -----
+        This method generates the input file including ATOMIC_POSITIONS section
+        and writes the pseudopotential file (pseudo.dat) if needed.
+        """
         # pseudo potential generation (pseudo.dat)
         self.pseudo_potentials.write_pseudopotential_turborvb_file()
 
@@ -379,13 +470,13 @@ class Makefort10(FortranIO):
 
                 # hybrid orbitals (k==0):
                 if k == 0:  # hybrid orbital:
-                    logger.debug(basis_sets.hyb_nucleus_index)
+                    print(basis_sets.hyb_nucleus_index)
                     hyb_index_list = [
                         i
                         for i, x in enumerate(basis_sets.hyb_nucleus_index)
                         if x == nucleus
                     ]
-                    logger.debug(f"hyb_index_list = {hyb_index_list}")
+                    print(f"hyb_index_list = {hyb_index_list}")
                     for hyb_index in hyb_index_list:
                         hyb_shell_ang_mom = basis_sets.hyb_shell_ang_mom[hyb_index]
                         hyb_shell_ang_mom_turbo = (

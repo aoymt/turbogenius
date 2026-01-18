@@ -29,15 +29,40 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 class Convertfort10_genius(GeniusIO):
     """
+    Wrapper class for pyturbo convertfort10 functionality.
 
-    This class is a wrapper of pyturbo convertfort10 class
+    This class provides a high-level interface to convert fort.10 wavefunction
+    files, including mesh generation and conversion between different formats.
 
-    Attributes:
-         in_fort10 (str): fort.10 WF file (input)
-         out_fort10 (str): fort.10 WF file (template)
-         grid_size (float): grid size for xyz (bohr)
-         add_onebody2det (bool): add one-body potential to the determinant part
-         change_contr (bool): allow the change in contraction coefficients
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10_in".
+    out_fort10 : str, optional
+        Output fort.10 wavefunction file (template), by default "fort.10_out".
+    grid_size : float, optional
+        Grid size for xyz in Bohr, by default 0.10.
+    add_onebody2det : bool, optional
+        If True, add one-body potential to the determinant part, by default False.
+    change_contr : bool, optional
+        If True, allow the change in contraction coefficients, by default False.
+
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    out_fort10 : str
+        Output fort.10 wavefunction file.
+    grid_size : float
+        Grid size for xyz in Bohr.
+    add_onebody2det : bool
+        Flag to add one-body potential to the determinant part.
+    change_contr : bool
+        Flag to allow the change in contraction coefficients.
+    convertfort10 : Convertfort10
+        Underlying pyturbo Convertfort10 instance.
+    io_fort10 : IO_fort10
+        IO_fort10 instance for reading fort.10 files.
     """
 
     def __init__(
@@ -146,10 +171,12 @@ class Convertfort10_genius(GeniusIO):
         """
         Generate input files and run the command.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
-
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "convertfort10.input".
+        output_name : str, optional
+            Output file name, by default "out_conv".
         """
         self.generate_input(input_name=input_name)
         self.run(input_name=input_name, output_name=output_name)
@@ -158,9 +185,10 @@ class Convertfort10_genius(GeniusIO):
         """
         Generate input file.
 
-        Args:
-            input_name (str): input file name
-
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "convertfort10.input".
         """
         self.convertfort10.generate_input(input_name=input_name)
 
@@ -168,9 +196,17 @@ class Convertfort10_genius(GeniusIO):
         """
         Run the command.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "convertfort10.input".
+        output_name : str, optional
+            Output file name, by default "out_conv".
+
+        Raises
+        ------
+        AssertionError
+            If the calculation does not complete successfully.
         """
         self.convertfort10.run(input_name=input_name, output_name=output_name)
         flags = self.convertfort10.check_results(output_names=[output_name])
@@ -180,10 +216,17 @@ class Convertfort10_genius(GeniusIO):
         """
         Check the result.
 
-        Args:
-            output_names (list): a list of output file names
-        Returns:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        output_names : list, optional
+            A list of output file names to check. If None, defaults to
+            ["out_conv"], by default None.
+
+        Returns
+        -------
+        bool
+            True if all the runs were successful, False if an error is
+            detected in the files.
         """
         if output_names is None:
             output_names = ["out_conv"]

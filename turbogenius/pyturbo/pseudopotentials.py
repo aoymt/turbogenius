@@ -38,6 +38,68 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 class Pseudopotentials:
+    """
+    Class for managing pseudopotentials (Effective Core Potentials, ECP).
+
+    This class handles pseudopotential information including angular momentum,
+    exponents, coefficients, and powers for ECP calculations.
+
+    Parameters
+    ----------
+    max_ang_mom_plus_1 : list, optional
+        Maximum angular momentum plus 1 for each nucleus, by default [].
+    z_core : list, optional
+        Core charge (Z_core) for each nucleus, by default [].
+    cutoff : list, optional
+        Cutoff radius for each nucleus, by default [].
+    nucleus_index : list, optional
+        Index of nucleus for each ECP term, by default [].
+    element_list : list, optional
+        List of element symbols, by default [].
+    ang_mom : list, optional
+        Angular momentum quantum number for each ECP term, by default [].
+    exponent : list, optional
+        Exponent values for each ECP term, by default [].
+    coefficient : list, optional
+        Coefficient values for each ECP term, by default [].
+    power : list, optional
+        Power values for each ECP term, by default [].
+
+    Attributes
+    ----------
+    element_list : list
+        List of element symbols.
+    max_ang_mom_plus_1 : list
+        Maximum angular momentum plus 1 for each nucleus.
+    z_core : list
+        Core charge (Z_core) for each nucleus.
+    cutoff : list
+        Cutoff radius for each nucleus.
+    nucleus_index : list
+        Index of nucleus for each ECP term.
+    ang_mom : list
+        Angular momentum quantum number for each ECP term.
+    exponent : list
+        Exponent values for each ECP term.
+    coefficient : list
+        Coefficient values for each ECP term.
+    power : list
+        Power values for each ECP term.
+    nuclei_num : int
+        Number of unique nuclei (property).
+    ecp_num : int
+        Total number of ECP terms (property).
+
+    Raises
+    ------
+    ValueError
+        If the number of unique nucleus indices does not match the length of
+        max_ang_mom_plus_1, z_core, or cutoff lists.
+    AssertionError
+        If the lengths of ang_mom, exponent, coefficient, and power lists
+        do not match.
+    """
+
     def __init__(
         self,
         max_ang_mom_plus_1: Optional[list] = None,
@@ -50,6 +112,39 @@ class Pseudopotentials:
         coefficient: Optional[list] = None,
         power: Optional[list] = None,
     ):
+        """
+        Initialize the Pseudopotentials class.
+
+        Parameters
+        ----------
+        max_ang_mom_plus_1 : list, optional
+            Maximum angular momentum plus 1 for each nucleus, by default [].
+        z_core : list, optional
+            Core charge (Z_core) for each nucleus, by default [].
+        cutoff : list, optional
+            Cutoff radius for each nucleus, by default [].
+        nucleus_index : list, optional
+            Index of nucleus for each ECP term, by default [].
+        element_list : list, optional
+            List of element symbols, by default [].
+        ang_mom : list, optional
+            Angular momentum quantum number for each ECP term, by default [].
+        exponent : list, optional
+            Exponent values for each ECP term, by default [].
+        coefficient : list, optional
+            Coefficient values for each ECP term, by default [].
+        power : list, optional
+            Power values for each ECP term, by default [].
+
+        Raises
+        ------
+        ValueError
+            If the number of unique nucleus indices does not match the length of
+            max_ang_mom_plus_1, z_core, or cutoff lists.
+        AssertionError
+            If the lengths of ang_mom, exponent, coefficient, and power lists
+            do not match.
+        """
         if max_ang_mom_plus_1 is None:
             max_ang_mom_plus_1 = []
         if z_core is None:
@@ -105,13 +200,42 @@ class Pseudopotentials:
 
     @property
     def nuclei_num(self):
+        """
+        Get the number of unique nuclei.
+
+        Returns
+        -------
+        int
+            Number of unique nuclei.
+        """
         return len(set(self.nucleus_index))
 
     @property
     def ecp_num(self):
+        """
+        Get the total number of ECP terms.
+
+        Returns
+        -------
+        int
+            Total number of ECP terms.
+        """
         return len(self.ang_mom)
 
     def write_pseudopotential_turborvb_file(self, file: str = "pseudo.dat"):
+        """
+        Write pseudopotential data to TurboRVB format file.
+
+        Parameters
+        ----------
+        file : str, optional
+            Output file name, by default "pseudo.dat".
+
+        Notes
+        -----
+        This method writes the pseudopotential data in TurboRVB format,
+        including ECP header and all ECP terms for each nucleus.
+        """
         with open(file, "w") as f:
             output = []
             output.append("ECP\n")

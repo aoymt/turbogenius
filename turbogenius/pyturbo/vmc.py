@@ -45,12 +45,60 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 class VMC(FortranIO):
+    """
+    Wrapper class for TurboRVB VMC (Variational Monte Carlo) program.
+
+    This class provides an interface to perform VMC calculations, including
+    energy and force calculations with optional twist averaging.
+
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10".
+    namelist : Namelist, optional
+        Namelist object containing program parameters. If None, an empty
+        Namelist is created, by default None.
+    twist_average : bool or int, optional
+        Twist average flag. False or 0: single-k point, True or 1: Monkhorst-Pack,
+        2: manual k-grid, by default False.
+
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    namelist : Namelist
+        Namelist object containing program parameters.
+    twist_average : bool or int
+        Twist average flag.
+    manual_kpoints : list
+        Manual k-points list (set via property setter).
+    """
+
     def __init__(
         self,
         in_fort10: str = "fort.10",
         namelist: Optional[Namelist] = None,
         twist_average: bool = False,  # False or 0: single-k, True or 1: Monkhorst-Pack, 2: manual k-grid
     ):
+        """
+        Initialize the VMC class.
+
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10".
+        namelist : Namelist, optional
+            Namelist object containing program parameters. If None, an empty
+            Namelist is created, by default None.
+        twist_average : bool or int, optional
+            Twist average flag. False or 0: single-k point, True or 1: Monkhorst-Pack,
+            2: manual k-grid, by default False.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the fort.10 file is not found.
+        """
         if namelist is None:
             namelist = Namelist()
 
@@ -67,10 +115,38 @@ class VMC(FortranIO):
 
     @property
     def manual_kpoints(self):
+        """
+        Get manual k-points.
+
+        Returns
+        -------
+        list
+            List of manual k-points. Format: [[kpoints_up], [kpoints_dn]],
+            where each kpoint is [kx, ky, kz, wkp].
+        """
         return self.__manual_kpoints
 
     @manual_kpoints.setter
     def manual_kpoints(self, kpoints):
+        """
+        Set manual k-points.
+
+        Parameters
+        ----------
+        kpoints : list
+            List of manual k-points. Format: [[kpoints_up], [kpoints_dn]],
+            where each kpoint is [kx, ky, kz, wkp].
+
+        Raises
+        ------
+        AssertionError
+            If the k-points format is invalid.
+
+        Notes
+        -----
+        This setter automatically configures the namelist for manual k-points
+        when twist_average == 2.
+        """
         assert len(kpoints) == 2
         kpoints_up, kpoints_dn = kpoints
         assert len(kpoints_up) == len(kpoints_dn)
@@ -93,16 +169,49 @@ class VMC(FortranIO):
         )
 
     def __str__(self):
+        """
+        Return string representation of the VMC object.
 
+        Returns
+        -------
+        str
+            String description of the object.
+        """
         output = [
             "TurboRVB vmc python wrapper",
         ]
         return "\n".join(output)
 
     def sanity_check(self):
+        """
+        Perform sanity checks on the input parameters.
+
+        Notes
+        -----
+        This method is a placeholder and does nothing. It should be
+        implemented to validate input parameters.
+        """
         pass
 
     def generate_input(self, input_name: str = "datasvmc.input"):
+        """
+        Generate input file for the VMC program.
+
+        Parameters
+        ----------
+        input_name : str, optional
+            Output input file name, by default "datasvmc.input".
+
+        Raises
+        ------
+        ValueError
+            If no suitable position for KPOINT is found when using manual k-points.
+
+        Notes
+        -----
+        If twist_average == 2 (manual k-points), the k-points are inserted
+        into the input file at the appropriate location.
+        """
         self.namelist.write(input_name)
         # check if twist_average is manual
         if self.twist_average == 2:  # k-points are set manually
@@ -143,6 +252,26 @@ class VMC(FortranIO):
     def run(
         self, input_name: str = "datasvmc.input", output_name: str = "out_vmc"
     ):
+        """
+        Run the VMC program.
+
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "datasvmc.input".
+        output_name : str, optional
+            Output file name, by default "out_vmc".
+
+        Notes
+        -----
+        This method removes existing output files (pip0.d, forces.dat) before
+        running the calculation.
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            If the program execution fails.
+        """
         remove_file(file="pip0.d")
         remove_file(file="forces.dat")
         run(
@@ -152,6 +281,21 @@ class VMC(FortranIO):
         )
 
     def check_results(self, output_names: Optional[list] = None):
+        """
+        Check the results of the VMC program execution.
+
+        Parameters
+        ----------
+        output_names : list, optional
+            List of output file names to check. If None, defaults to
+            ["out_vmc"], by default None.
+
+        Returns
+        -------
+        list of bool
+            List of boolean flags indicating success for each output file.
+            True if the file contains "total.*#.*bin.*considered", False otherwise.
+        """
         if output_names is None:
             output_names = ["out_vmc"]
         flags = []
@@ -170,6 +314,25 @@ class VMC(FortranIO):
     def get_estimated_time_for_1_generation(
         self, output_names: Optional[list] = None
     ):
+        """
+        Get estimated time for one generation from output files.
+
+        Parameters
+        ----------
+        output_names : list, optional
+            List of output file names. If None, defaults to ["out_vmc"],
+            by default None.
+
+        Returns
+        -------
+        float
+            Estimated time for one generation in seconds.
+
+        Notes
+        -----
+        This method reads the output files and extracts the average time
+        for 1000 generations, then divides by 1000 to get the time per generation.
+        """
         if output_names is None:
             output_names = ["out_vmc"]
         out_min = []
@@ -197,6 +360,25 @@ class VMC(FortranIO):
 
     @staticmethod
     def read_energy(twist_average: bool = False):
+        """
+        Read energy and error from pip0.d file.
+
+        Parameters
+        ----------
+        twist_average : bool, optional
+            If True, reads from line 0 (twist-averaged). If False, reads from
+            line 1 (single k-point), by default False.
+
+        Returns
+        -------
+        tuple
+            A tuple containing (energy, error) in Hartree.
+
+        Raises
+        ------
+        FileNotFoundError
+            If pip0.d file is not found.
+        """
         if twist_average:
             line = get_line_from_file(file="pip0.d", line_no=0).split()
             energy = float(line[3])
@@ -214,6 +396,30 @@ class VMC(FortranIO):
         num_proc: int = -1,
         rerun: bool = False,
     ):
+        """
+        Get energy and error from VMC calculation.
+
+        Parameters
+        ----------
+        init : int, optional
+            Number of initial blocks to discard, by default 10.
+        bin : int, optional
+            Binning length, by default 10.
+        num_proc : int, optional
+            Number of MPI processes. If -1, uses all available, by default -1.
+        rerun : bool, optional
+            If True, recompute energy even if pip0.d exists, by default False.
+
+        Returns
+        -------
+        tuple
+            A tuple containing (energy, error) in Hartree.
+
+        Notes
+        -----
+        This method checks if pip0.d exists and is valid. If not, it calls
+        compute_energy_and_forces() to generate the energy file.
+        """
         force_compute_flag = False
         if rerun:
             force_compute_flag = True

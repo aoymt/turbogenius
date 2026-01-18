@@ -34,17 +34,49 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 class Prep(FortranIO):
-    """Prep
+    """
+    Wrapper class for TurboRVB prep program.
 
-    Prep class
+    This class provides an interface to the prep program, which is used for
+    DFT calculations and preparing wavefunctions for QMC calculations.
 
-    Attributes:
-        in_fort10 (str): filrname of fort.10, always fort.10
-        namelist (namelist): namelist of prep.input
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10".
+    namelist : Namelist, optional
+        Namelist object containing program parameters. If None, an empty
+        Namelist is created, by default None.
+    nelocc_list : list, optional
+        List of occupation numbers for up electrons, by default [].
+    neloccdn_list : list, optional
+        List of occupation numbers for down electrons, by default [].
+    magnetic_moments_3d_array : list or numpy.ndarray, optional
+        3D array of magnetic moments with shape (nzs, nys, nxs), by default [].
+    twist_average : bool or int, optional
+        Twist average flag. False or 0: single-k point, True or 1: Monkhorst-Pack,
+        2: manual k-grid, by default False.
 
-    Examples, how to use:
-        See tests dir.
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    namelist : Namelist
+        Namelist object containing program parameters.
+    nelocc_list : list
+        List of occupation numbers for up electrons.
+    neloccdn_list : list
+        List of occupation numbers for down electrons.
+    magnetic_moments_3d_array : numpy.ndarray
+        3D array of magnetic moments.
+    twist_average : bool or int
+        Twist average flag.
+    manual_kpoints : list
+        Manual k-points list (set via property setter).
 
+    Examples
+    --------
+    See tests directory for usage examples.
     """
 
     def __init__(
@@ -58,6 +90,31 @@ class Prep(FortranIO):
         ] = None,  # dim = 3, shape = (nzs,nys,nxs)
         twist_average: bool = False,  # False or 0: single-k, True or 1: Monkhorst-Pack, 2: manual k-grid
     ):
+        """
+        Initialize the Prep class.
+
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10".
+        namelist : Namelist, optional
+            Namelist object containing program parameters. If None, an empty
+            Namelist is created, by default None.
+        nelocc_list : list, optional
+            List of occupation numbers for up electrons, by default [].
+        neloccdn_list : list, optional
+            List of occupation numbers for down electrons, by default [].
+        magnetic_moments_3d_array : list or numpy.ndarray, optional
+            3D array of magnetic moments with shape (nzs, nys, nxs), by default [].
+        twist_average : bool or int, optional
+            Twist average flag. False or 0: single-k point, True or 1: Monkhorst-Pack,
+            2: manual k-grid, by default False.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the fort.10 file or pseudo.dat (if needed) is not found.
+        """
         if namelist is None:
             namelist = Namelist()
         if nelocc_list is None:
@@ -86,10 +143,38 @@ class Prep(FortranIO):
 
     @property
     def manual_kpoints(self):
+        """
+        Get manual k-points.
+
+        Returns
+        -------
+        list
+            List of manual k-points. Format: [[kpoints_up], [kpoints_dn]],
+            where each kpoint is [kx, ky, kz, wkp].
+        """
         return self.__manual_kpoints
 
     @manual_kpoints.setter
     def manual_kpoints(self, kpoints):
+        """
+        Set manual k-points.
+
+        Parameters
+        ----------
+        kpoints : list
+            List of manual k-points. Format: [[kpoints_up], [kpoints_dn]],
+            where each kpoint is [kx, ky, kz, wkp].
+
+        Raises
+        ------
+        AssertionError
+            If the k-points format is invalid.
+
+        Notes
+        -----
+        This setter automatically configures the namelist for manual k-points
+        when twist_average == 2.
+        """
         assert len(kpoints) == 2
         kpoints_up, kpoints_dn = kpoints
         assert len(kpoints_up) == len(kpoints_dn)
@@ -110,10 +195,33 @@ class Prep(FortranIO):
 
     @property
     def magnetic_moments_3d_array(self):
+        """
+        Get magnetic moments 3D array.
+
+        Returns
+        -------
+        numpy.ndarray
+            3D array of magnetic moments with shape (nzs, nys, nxs).
+        """
         return self.__magnetic_moments_3d_array
 
     @magnetic_moments_3d_array.setter
     def magnetic_moments_3d_array(self, matrix):
+        """
+        Set magnetic moments 3D array.
+
+        Parameters
+        ----------
+        matrix : numpy.ndarray
+            3D array of magnetic moments with shape (nzs, nys, nxs).
+
+        Raises
+        ------
+        KeyError
+            If nxs, nys, or nzs are not set in the namelist.
+        AssertionError
+            If the matrix dimensions or shape are invalid.
+        """
         if len(matrix) != 0:
             try:
                 nxs = self.namelist.get_parameter(parameter="nxs")
@@ -127,24 +235,48 @@ class Prep(FortranIO):
         self.__magnetic_moments_3d_array = matrix
 
     def __str__(self):
+        """
+        Return string representation of the Prep object.
+
+        Returns
+        -------
+        str
+            String description of the object.
+        """
         output = [
             "TurboRVB prep python wrapper",
         ]
         return "\n".join(output)
 
     def sanity_check(self):
+        """
+        Perform sanity checks on the input parameters.
+
+        Notes
+        -----
+        This method is a placeholder and does nothing. It should be
+        implemented to validate input parameters.
+        """
         pass
 
     def generate_input(self, input_name: str = "prep.input"):
         """
-        Args:
-            input_name (str): Name of input file
+        Generate input file for the prep program.
 
-        Returns:
-            NA
+        Parameters
+        ----------
+        input_name : str, optional
+            Output input file name, by default "prep.input".
 
-        Yields:
-            "input_name" is generated.
+        Raises
+        ------
+        ValueError
+            If no suitable position for KPOINT is found when using manual k-points.
+
+        Notes
+        -----
+        If twist_average == 2 (manual k-points), the k-points are inserted
+        into the input file at the appropriate location.
         """
         self.namelist.write(input_name)
         # check if twist_average is manual

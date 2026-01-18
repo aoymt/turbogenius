@@ -32,6 +32,24 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 def get_linenum_fort12(fort12="fort.12"):
+    """
+    Get the number of lines (records) in a fort.12 file.
+
+    Parameters
+    ----------
+    fort12 : str, optional
+        Name of the fort.12 file, by default "fort.12".
+
+    Returns
+    -------
+    int
+        Number of data records in the file.
+
+    Notes
+    -----
+    This function reads a Fortran unformatted file and counts the number
+    of records by checking the column length and reading the file structure.
+    """
     # check column length of fort.12
     f = FortranFile(fort12, "r")
     a = f.read_reals(dtype="float64")
@@ -48,11 +66,37 @@ def get_linenum_fort12(fort12="fort.12"):
 
 
 def return_element_symbol(atomic_number):
+    """
+    Return element symbol from atomic number.
+
+    Parameters
+    ----------
+    atomic_number : int or float or str
+        Atomic number of the element.
+
+    Returns
+    -------
+    str
+        Element symbol (e.g., "H", "He", "Li").
+    """
     atomic_number = int(float(atomic_number))
     return str(ElementBase.from_Z(atomic_number))
 
 
 def return_atomic_number(element):
+    """
+    Return atomic number from element symbol.
+
+    Parameters
+    ----------
+    element : str
+        Element symbol (e.g., "H", "He", "Li").
+
+    Returns
+    -------
+    float
+        Atomic number. Returns 0.0 if the element is not found.
+    """
     element = str(element)
     try:
         E = Element(element)
@@ -63,11 +107,38 @@ def return_atomic_number(element):
 
 
 def remove_file(file):
+    """
+    Remove a file if it exists.
+
+    Parameters
+    ----------
+    file : str
+        Path to the file to remove.
+
+    Notes
+    -----
+    This function silently does nothing if the file does not exist.
+    """
     if os.path.isfile(file):
         os.remove(file)
 
 
 def copy_file(from_file, to_file):
+    """
+    Copy a file from source to destination.
+
+    Parameters
+    ----------
+    from_file : str
+        Source file path.
+    to_file : str
+        Destination file path.
+
+    Notes
+    -----
+    This function silently does nothing if the source and destination
+    are the same file.
+    """
     try:
         shutil.copy(from_file, to_file)
     except shutil.SameFileError:
@@ -75,11 +146,37 @@ def copy_file(from_file, to_file):
 
 
 def file_check(file):
+    """
+    Check if a file exists.
+
+    Parameters
+    ----------
+    file : str
+        Path to the file to check.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the file does not exist.
+    """
     if not os.path.exists(file):
         raise FileNotFoundError(f"{file} is not found.")
 
 
 def file_check_flag(file):
+    """
+    Check if a file exists and return a boolean flag.
+
+    Parameters
+    ----------
+    file : str
+        Path to the file to check.
+
+    Returns
+    -------
+    bool
+        True if the file exists, False otherwise.
+    """
     if os.path.exists(file):
         return True
     else:
@@ -87,13 +184,53 @@ def file_check_flag(file):
 
 
 def get_line_from_file(file, line_no):
+    """
+    Get a specific line from a file.
+
+    Parameters
+    ----------
+    file : str
+        Path to the file.
+    line_no : int
+        Line number (0-indexed) to retrieve.
+
+    Returns
+    -------
+    str
+        The line content at the specified line number.
+
+    Raises
+    ------
+    IndexError
+        If the line number is out of range.
+    """
     with open(file, "r") as f:
         data = f.readlines()
     return data[line_no]
 
 
 def prompt(text, checker):
-    """Loop input() *FOREVER* while input is invalid."""
+    """
+    Loop input() until valid input is provided.
+
+    Parameters
+    ----------
+    text : str
+        Prompt text to display to the user.
+    checker : callable
+        Function that takes the input string and returns True if valid,
+        False otherwise.
+
+    Returns
+    -------
+    str
+        Valid user input string.
+
+    Notes
+    -----
+    This function will loop indefinitely until the checker function
+    returns True for the user input.
+    """
     while True:
         output = input(text)
         if checker(output):
@@ -101,6 +238,27 @@ def prompt(text, checker):
 
 
 def get_str_variable_type_auto(variable):
+    """
+    Automatically determine the type of a string variable.
+
+    Parameters
+    ----------
+    variable : str
+        String variable to analyze.
+
+    Returns
+    -------
+    int, float, or str
+        The variable converted to the appropriate type:
+        - int if the variable is a decimal integer
+        - float if the variable is a decimal number (handles 'd'/'D' as 'e' for scientific notation)
+        - str if the variable is not numeric (strips single quotes)
+
+    Notes
+    -----
+    This function attempts to convert Fortran-style scientific notation
+    (using 'd' or 'D') to Python-style (using 'e').
+    """
     # logger.debug(f"variable={variable}")
     # logger.debug(f"isdecimal={variable.isdecimal()}")
 
@@ -120,6 +278,36 @@ def get_str_variable_type_auto(variable):
 
 
 def turbo_prim_orb_type_num(orb_type_chr):
+    """
+    Return TurboRVB primitive orbital type number from orbital type character.
+
+    Parameters
+    ----------
+    orb_type_chr : str
+        Orbital type character (e.g., "s", "p", "d", "f", "g", "h", "i").
+        Special types: "s100", "s131", "p103", "p150".
+
+    Returns
+    -------
+    int
+        TurboRVB primitive orbital type number.
+
+    Raises
+    ------
+    NotImplementedError
+        If the orbital type character is not implemented.
+
+    Notes
+    -----
+    Mapping:
+    - s: 16, s100: 100, s131: 131
+    - p: 36, p103: 103, p150: 150
+    - d: 37
+    - f: 48
+    - g: 51
+    - h: 72
+    - i: 73
+    """
     if orb_type_chr == "s":
         return 16
     elif orb_type_chr == "s100":
@@ -151,6 +339,35 @@ def turbo_prim_orb_type_num(orb_type_chr):
 
 
 def turbo_cont_orb_type_num(orb_type_chr):
+    """
+    Return TurboRVB contracted orbital type number from orbital type character.
+
+    Parameters
+    ----------
+    orb_type_chr : str
+        Orbital type character (e.g., "s", "p", "d", "f", "g", "h", "i").
+
+    Returns
+    -------
+    int
+        TurboRVB contracted orbital type number.
+
+    Raises
+    ------
+    NotImplementedError
+        If the orbital type character is not implemented.
+
+    Notes
+    -----
+    Mapping:
+    - s: 300
+    - p: 400
+    - d: 500
+    - f: 600
+    - g: 700
+    - h: 800
+    - i: 900
+    """
     if orb_type_chr == "s":
         return 300
     elif orb_type_chr == "p":
@@ -171,6 +388,30 @@ def turbo_cont_orb_type_num(orb_type_chr):
 
 
 def turbo_conv_cont_to_prim_orb_type_num(orb_type_int):
+    """
+    Convert TurboRVB contracted orbital type number to primitive orbital type number.
+
+    Parameters
+    ----------
+    orb_type_int : int
+        TurboRVB orbital type number (contracted or primitive).
+
+    Returns
+    -------
+    int
+        TurboRVB primitive orbital type number.
+
+    Notes
+    -----
+    Mapping:
+    - 16, 300 -> 16 (s)
+    - 36, 400 -> 36 (p)
+    - 37, 500 -> 37 (d)
+    - 48, 600 -> 48 (f)
+    - 51, 700 -> 51 (g)
+    - 72, 800 -> 72 (h)
+    - 73, 900 -> 73 (i)
+    """
     if orb_type_int in {16, 300}:
         return 16
     elif orb_type_int in {36, 400}:
@@ -191,6 +432,24 @@ def turbo_conv_cont_to_prim_orb_type_num(orb_type_int):
 
 
 def return_ang_mom(orb_typ_chr):
+    """
+    Return angular momentum quantum number from orbital type character.
+
+    Parameters
+    ----------
+    orb_typ_chr : str
+        Orbital type character (e.g., "s", "p", "d", "f", "g", "h", "i").
+
+    Returns
+    -------
+    int
+        Angular momentum quantum number (0 for s, 1 for p, etc.).
+
+    Raises
+    ------
+    NotImplementedError
+        If the orbital type character is not implemented.
+    """
     if orb_typ_chr in {"s", "s100", "s131"}:
         return 0
     elif orb_typ_chr in {"p", "p103", "p150"}:
@@ -211,6 +470,24 @@ def return_ang_mom(orb_typ_chr):
 
 
 def return_orbchr(ang_mom):
+    """
+    Return orbital type character from angular momentum quantum number.
+
+    Parameters
+    ----------
+    ang_mom : int
+        Angular momentum quantum number (0-6).
+
+    Returns
+    -------
+    str
+        Orbital type character ("s", "p", "d", "f", "g", "h", "i").
+
+    Raises
+    ------
+    NotImplementedError
+        If the angular momentum is not in the range 0-6.
+    """
     if ang_mom == 0:
         return "s"
     elif ang_mom == 1:
@@ -230,6 +507,25 @@ def return_orbchr(ang_mom):
 
 
 def return_orb_type_chr(num_orb_type):
+    """
+    Return orbital type character from TurboRVB orbital type number.
+
+    Parameters
+    ----------
+    num_orb_type : int
+        TurboRVB orbital type number.
+
+    Returns
+    -------
+    str
+        Orbital type character (e.g., "s", "p", "d", "f", "g", "h", "i",
+        or special types like "s100", "s131", "p103", "p150").
+
+    Raises
+    ------
+    NotImplementedError
+        If the orbital type number is not implemented.
+    """
     if num_orb_type in {16, 300}:
         return "s"
     elif num_orb_type in {100}:

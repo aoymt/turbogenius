@@ -23,17 +23,42 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 class Convertpfaff(FortranIO):
     """
+    Wrapper class for TurboRVB convertpfaff.x program.
 
-    This class is a wrapper of turborvb convertpfaff.x
+    This class provides an interface to convert wavefunctions to Pfaffian
+    form, which is useful for certain types of quantum Monte Carlo calculations.
 
-    Attributes:
-         in_fort10 (str): input fort.10
-         out_fort10 (str): output fort.10
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10_in".
+    out_fort10 : str, optional
+        Output fort.10 wavefunction file (template), by default "fort.10_out".
 
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    out_fort10 : str
+        Output fort.10 wavefunction file.
     """
 
     def __init__(self, in_fort10: str = "fort.10_in", out_fort10: str = "fort.10_out"):
+        """
+        Initialize the Convertpfaff class.
 
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10_in".
+        out_fort10 : str, optional
+            Output fort.10 wavefunction file (template), by default "fort.10_out".
+
+        Raises
+        ------
+        FileNotFoundError
+            If the fort.10 files or pseudo.dat (if needed) is not found.
+        """
         """
         input values
         """
@@ -45,12 +70,24 @@ class Convertpfaff(FortranIO):
         self.out_fort10 = out_fort10
 
     def __str__(self) -> str:
+        """
+        Return string representation of the Convertpfaff object.
+
+        Returns
+        -------
+        str
+            String description of the object.
+        """
         return str(f"{self.__class__.__name__} class")
 
     def sanity_check(self) -> None:
         """
-        Sanity check (to be implemented.)
+        Perform sanity checks on the input parameters.
 
+        Notes
+        -----
+        This method is a placeholder and does nothing. It should be
+        implemented to validate input parameters.
         """
         pass
 
@@ -58,8 +95,10 @@ class Convertpfaff(FortranIO):
         """
         Generate input file.
 
-        Args:
-
+        Notes
+        -----
+        This method does nothing for Convertpfaff, as it does not require
+        a separate input file generation step.
         """
         logger.info("No input has been generated. \n")
 
@@ -71,13 +110,24 @@ class Convertpfaff(FortranIO):
         output_name: str = "out_pfaff",
     ):
         """
-        Run the command.
+        Run the convertpfaff command.
 
-        Args:
-            rotate_flag (bool): rotate the angle of spins
-            rotate_angle (int): rotation angle (* pi radian)
-            scale_mean_filed (int): to be filled
-            output_name (str): output file name
+        Parameters
+        ----------
+        rotate_flag : bool, optional
+            If True, rotate the angle of spins, by default False.
+        rotate_angle : int, optional
+            Rotation angle in units of pi radians, by default 0.
+        scale_mean_field : int, optional
+            Scaling factor for mean field (used for unpaired cases),
+            by default 1000.
+        output_name : str, optional
+            Output file name, by default "out_pfaff".
+
+        Notes
+        -----
+        For unpaired systems (nelup != neldn), the scale_mean_field parameter
+        is used. For closed-shell systems, rotation is not performed.
         """
         if not rotate_flag:
             fort10 = IO_fort10("fort.10_in")
@@ -99,10 +149,21 @@ class Convertpfaff(FortranIO):
         """
         Check the result.
 
-        Args:
-            output_names (list): a list of output file names
-        Returns:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        output_names : list, optional
+            List of output file names to check. If None, defaults to
+            ["out_pfaff"], by default None.
+
+        Returns
+        -------
+        list of bool
+            List of boolean flags. Currently always returns [True].
+
+        Notes
+        -----
+        This method is a placeholder and always returns True. It should be
+        implemented to check the output files for successful completion.
         """
         if output_names is None:
             output_names = ["out_pfaff"]
@@ -111,18 +172,24 @@ class Convertpfaff(FortranIO):
     @staticmethod
     def read_default_namelist() -> None:
         """
-        Read default namelist values from turbogenius database
+        Read default namelist values from turbogenius database.
 
-        Args:
+        Notes
+        -----
+        This method is a placeholder and does nothing. Convertpfaff does
+        not use a namelist file.
         """
         pass
 
     @staticmethod
     def read_namelist_from_file() -> None:
         """
-        Read namelist values from a specified file
+        Read namelist values from a specified file.
 
-        Args:
+        Notes
+        -----
+        This method is a placeholder and does nothing. Convertpfaff does
+        not use a namelist file.
         """
         pass
 
@@ -131,13 +198,19 @@ class Convertpfaff(FortranIO):
         cls, in_fort10: str = "fort.10_in", out_fort10: str = "fort.10_out"
     ):
         """
-        Read default namelist values from turbogenius database
+        Create a Convertpfaff instance with default settings.
 
-        Args:
-            in_fort10 (str): input fort.10
-            out_fort10 (str): template fort.10
-        Returns:
-            cls: cls with default namelist values taken from the database
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10_in".
+        out_fort10 : str, optional
+            Output fort.10 wavefunction file (template), by default "fort.10_out".
+
+        Returns
+        -------
+        Convertpfaff
+            Convertpfaff instance.
         """
         return cls(in_fort10=in_fort10, out_fort10=out_fort10)
 
@@ -149,14 +222,22 @@ class Convertpfaff(FortranIO):
         out_fort10: str = "fort.10_out",
     ):
         """
-        Read namelist values from a specified file
+        Create a Convertpfaff instance from a file.
 
-        Args:
-            file (str): filename
-            in_fort10 (str): input fort.10
-            out_fort10 (str): template fort.10
-        Returns:
-            cls: cls with namelist values read from the specified file
+        Parameters
+        ----------
+        file : str, optional
+            File name (not used, kept for interface compatibility),
+            by default None.
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10_in".
+        out_fort10 : str, optional
+            Output fort.10 wavefunction file (template), by default "fort.10_out".
+
+        Returns
+        -------
+        Convertpfaff
+            Convertpfaff instance.
         """
         return cls(in_fort10=in_fort10, out_fort10=out_fort10)
 

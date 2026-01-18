@@ -34,13 +34,27 @@ def database_setup(
     database: str = "", sleep_time: float = 1.5, force: bool = False
 ) -> None:
     """
-    Downloading basis set and pseudo potential database from the Internet.
+    Download basis set and pseudo potential database from the Internet.
 
-    Args:
-        database (str): name of database, it should be chosen from database_list=["BFD", "ccECP", "BSE"]
-        sleep_time (float): sleeping time for downloading (float)
-        force (bool): if true, overwrite an existing database
+    Parameters
+    ----------
+    database : str, optional
+        Name of database, it should be chosen from database_list=["BFD", "ccECP", "BSE"],
+        by default "".
+    sleep_time : float, optional
+        Sleeping time for downloading in seconds, by default 1.5.
+    force : bool, optional
+        If True, overwrite an existing database, by default False.
 
+    Raises
+    ------
+    NotImplementedError
+        If the specified database is not supported.
+
+    Notes
+    -----
+    The downloaded files are stored in the turbo_genius_tmp_dir directory.
+    A "completed" marker file is created after successful download.
     """
 
     basis_sets_output_dir = os.path.join(

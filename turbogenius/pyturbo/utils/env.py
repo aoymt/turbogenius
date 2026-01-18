@@ -2,12 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
+Environment configuration module for pyturbo.
 
-pyturbo: environmental values used in pyturbo
-
-Todo:
-    * docstrings are not completed.
-
+This module defines path variables, TurboRVB binary paths, and environment
+settings used throughout the pyturbo package.
 """
 
 from __future__ import print_function

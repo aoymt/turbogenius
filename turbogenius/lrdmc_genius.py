@@ -30,22 +30,61 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 class LRDMC_genius(GeniusIO):
     """
+    Wrapper class for pyturbo LRDMC (Lattice Regularized Diffusion Monte Carlo) functionality.
 
-    This class is a wrapper of pyturbo LRDMC class
+    This class provides a high-level interface to perform LRDMC calculations,
+    including energy and force calculations with optional twist averaging.
 
-    Attributes:
-        fort10 (str): fort.10 WF file
-        lrdmcsteps (int): total number of MCMC steps.
-        alat (float): Lattice space (Bohr)
-        time_branching: interval between two branching steps. (a.u.)
-        etry (float): Trial Energy (Ha)
-        num_walkers (int): The number of walkers, -1 (default) = the number of MPI processes
-        pw_regularization (float): 0.00 (default). If this is > 0.0, the Pathak-Wager regularization is turned on.
-        maxtime (int): Maxtime (sec.)
-        twist_average (bool): Twist average flag, True or False
-        kpoints (list): k Monkhorst-Pack grids, [kx,ky,kz,nx,ny,nz], kx,y,z-> grids, nx,y,z-> shift=0, noshift=1.
-        force_calc_flag (bool): if True, compute energy and force, if False, compute only energy
-        nonlocalmoves (str): Treatment of locality approximation, choose from "tmove", "dla", "dlatm"
+    Parameters
+    ----------
+    fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10".
+    lrdmcsteps : int, optional
+        Total number of MCMC steps, by default 100.
+    alat : float, optional
+        Lattice space in Bohr, by default -0.20.
+    time_branching : float, optional
+        Interval between two branching steps in atomic units, by default 0.10.
+    etry : float, optional
+        Trial energy in Hartree, by default 0.0.
+    num_walkers : int, optional
+        Number of walkers. If -1, uses the number of MPI processes,
+        by default -1.
+    pw_regularization : float, optional
+        Pathak-Wagner regularization parameter. If > 0.0, the regularization
+        is turned on, by default 0.00.
+    maxtime : int, optional
+        Maximum time in seconds, by default 172800.
+    twist_average : bool, optional
+        Twist average flag, True or False, by default False.
+    kpoints : list, optional
+        k Monkhorst-Pack grids, [kx,ky,kz,nx,ny,nz], where kx,y,z are grids
+        and nx,y,z are shift (0) or no shift (1), by default [1, 1, 1, 0, 0, 0].
+    force_calc_flag : bool, optional
+        If True, compute energy and force. If False, compute only energy,
+        by default False.
+    nonlocalmoves : str, optional
+        Treatment of locality approximation. Choose from "tmove", "dla", "dlatm",
+        by default "dla".
+
+    Attributes
+    ----------
+    fort10 : str
+        Input fort.10 wavefunction file.
+    lrdmc : LRDMC
+        Underlying pyturbo LRDMC instance.
+    io_fort10 : IO_fort10
+        IO_fort10 instance for reading fort.10 files.
+    energy : float or None
+        Energy value (set after calculation).
+    energy_error : float or None
+        Energy error (set after calculation).
+    forces : numpy.ndarray or None
+        Forces array (3 * natom matrix, set after calculation).
+    forces_error : numpy.ndarray or None
+        Forces error array (set after calculation).
+    estimated_time_for_1_generation : float or None
+        Estimated time for one generation (set after calculation).
     """
 
     def __init__(
@@ -220,14 +259,21 @@ class LRDMC_genius(GeniusIO):
         """
         Generate input files and run the command.
 
-        Args:
-            bin_block (int): binning length
-            warmupblocks (int): the number of disregarded blocks,
-            correcting_factor (int): correcting factors
-            cont (bool): if True, continuation run (i.e., iopt=0), if False, starting from scratch (i.e., iopt=1).
-            input_name (str): input file name
-            output_name (str): output file name
-
+        Parameters
+        ----------
+        bin_block : int, optional
+            Binning length, by default 10.
+        warmupblocks : int, optional
+            Number of disregarded blocks, by default 2.
+        correcting_factor : int, optional
+            Correcting factors, by default 2.
+        cont : bool, optional
+            If True, continuation run (i.e., iopt=0). If False, starting from
+            scratch (i.e., iopt=1), by default False.
+        input_name : str, optional
+            Input file name, by default "datasfn.input".
+        output_name : str, optional
+            Output file name, by default "out_fn".
         """
         self.generate_input(cont=cont, input_name=input_name)
         self.run(input_name=input_name, output_name=output_name)
@@ -243,10 +289,13 @@ class LRDMC_genius(GeniusIO):
         """
         Generate input file.
 
-        Args:
-            cont (bool): if True, continuation run (i.e., iopt=0), if False, starting from scratch (i.e., iopt=1).
-            input_name (str): input file name
-
+        Parameters
+        ----------
+        cont : bool, optional
+            If True, continuation run (i.e., iopt=0). If False, starting from
+            scratch (i.e., iopt=1), by default False.
+        input_name : str, optional
+            Input file name, by default "datasfn.input".
         """
         if cont:
             self.lrdmc.set_parameter("iopt", 0, "&simulation")
@@ -258,9 +307,17 @@ class LRDMC_genius(GeniusIO):
         """
         Run the command.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "datasfn.input".
+        output_name : str, optional
+            Output file name, by default "out_fn".
+
+        Raises
+        ------
+        AssertionError
+            If the calculation does not complete successfully.
         """
         self.lrdmc.run(input_name=input_name, output_name=output_name)
         flags = self.lrdmc.check_results(output_names=[output_name])
@@ -275,15 +332,26 @@ class LRDMC_genius(GeniusIO):
         rerun: bool = False,
     ) -> None:
         """
-        Store results. This procedure stores estimated_time_for_1_generation, energy, and energy_error.
-        This method is needed for storing data and access to them later.
+        Store results.
 
-        Args:
-            bin_block (int): binning length
-            warmupblocks (int): the number of disregarded blocks
-            correcting_factor (int): correcting factors
-            output_names (list): a list of output file names
-            rerun (bool): if true, compute energy and force again even if there are energy and force files.
+        This procedure stores estimated_time_for_1_generation, energy, and
+        energy_error. This method is needed for storing data and accessing
+        them later.
+
+        Parameters
+        ----------
+        bin_block : int, optional
+            Binning length, by default 10.
+        warmupblocks : int, optional
+            Number of disregarded blocks, by default 2.
+        correcting_factor : int, optional
+            Correcting factors, by default 2.
+        output_names : list, optional
+            A list of output file names. If None, defaults to ["out_fn"],
+            by default None.
+        rerun : bool, optional
+            If True, compute energy and force again even if there are energy
+            and force files, by default False.
         """
         if output_names is None:
             output_names = ["out_fn"]
@@ -305,13 +373,19 @@ class LRDMC_genius(GeniusIO):
         rerun: bool = False,
     ) -> None:
         """
-        Compute energy and forces
+        Compute energy and forces.
 
-        Args:
-            bin_block (int): binning length
-            warmupblocks (int): the number of disregarded blocks
-            correcting_factor (int): correcting factors
-            rerun (bool): if true, compute energy and force again even if there are energy and force files.
+        Parameters
+        ----------
+        bin_block : int, optional
+            Binning length, by default 10.
+        warmupblocks : int, optional
+            Number of disregarded blocks, by default 2.
+        correcting_factor : int, optional
+            Correcting factors, by default 2.
+        rerun : bool, optional
+            If True, compute energy and force again even if there are energy
+            and force files, by default False.
         """
         self.energy, self.energy_error = self.lrdmc.get_energy(
             init=warmupblocks,
@@ -324,13 +398,18 @@ class LRDMC_genius(GeniusIO):
         self, output_names: Optional[list] = None
     ) -> float:
         """
-        This procedure stores estimated_time_for_1_generation.
+        Get estimated time for one generation.
 
-        Args:
-            output_names (list): a list of output file names
+        Parameters
+        ----------
+        output_names : list, optional
+            A list of output file names. If None, defaults to ["out_fn"],
+            by default None.
 
-        Return:
-            float: estimated_time_for_1_generation.
+        Returns
+        -------
+        float
+            Estimated time for one generation.
         """
         if output_names is None:
             output_names = ["out_fn"]
@@ -340,10 +419,17 @@ class LRDMC_genius(GeniusIO):
         """
         Check the result.
 
-        Args:
-            output_names (list): a list of output file names
-        Return:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        output_names : list, optional
+            A list of output file names to check. If None, defaults to
+            ["out_fn"], by default None.
+
+        Returns
+        -------
+        bool
+            True if all the runs were successful, False if an error is
+            detected in the files.
         """
         if output_names is None:
             output_names = ["out_fn"]

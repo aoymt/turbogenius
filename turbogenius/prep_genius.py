@@ -30,25 +30,56 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 class DFT_genius(GeniusIO):
     """
+    Wrapper class for pyturbo prep (DFT) functionality.
 
-    This class is a wrapper of pyturbo prep class
+    This class provides a high-level interface to perform DFT calculations
+    using the prep program, with support for various exchange-correlation
+    functionals and k-point sampling.
 
-    Attributes:
-         fort.10 (str): fort.10 WF file
-         grid_size (list):  3 floats, grid sizes [x,y,z]
-         lbox (list):  3 floats, Box sizes [x,y,z] (angstrom)
-         smearing (float): smearing parameter (Ha)
-         maxtime (int): maximum time (sec.)
-         memlarge (bool): use more memory to speed up
-         maxit (int): maximum iterations
-         epsdft (float): Tolerance in the convergence of total energy
-         h_field (float): magnetic field putting on each grid.
-         magnetic_moment_list (list): magnetic moment list, for all atoms.
-         xc (str): Exchange correlation functionals, lda or lsda
-         twist_average (bool): Twist average flag, True or False.
-         independent_kpoints (bool): Independent kpoint calculation, True or False
-         thr_lindep (float) : inverse of the condition number of basis sets. prep cuts the redundancy.
-         kpoints (list): k Monkhorst-Pack grids, [kx,ky,kz,nx,ny,nz], kx,y,z-> grids, nx,y,z-> shift=0, noshift=1.
+    Parameters
+    ----------
+    fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10".
+    det_contraction_flag : bool, optional
+        Flag for determinant contraction. If None, detected from fort.10,
+        by default None.
+    grid_size : list, optional
+        3 floats, grid sizes [x, y, z] in Bohr, by default [0.1, 0.1, 0.1].
+    lbox : list, optional
+        3 floats, box sizes [x, y, z] in Angstrom, by default [15.0, 15.0, 15.0].
+    smearing : float, optional
+        Smearing parameter in Hartree, by default 0.0.
+    maxtime : int, optional
+        Maximum time in seconds, by default 172800.
+    memlarge : bool, optional
+        Use more memory to speed up, by default False.
+    maxit : int, optional
+        Maximum iterations, by default 50.
+    epsdft : float, optional
+        Tolerance in the convergence of total energy, by default 1.0e-5.
+    h_field : float, optional
+        Magnetic field putting on each grid, by default 0.0.
+    magnetic_moment_list : list, optional
+        Magnetic moment list for all atoms, by default [].
+    xc : str, optional
+        Exchange correlation functionals: "lda" or "lsda", by default "lda".
+    twist_average : bool, optional
+        Twist average flag, True or False, by default False.
+    independent_kpoints : bool, optional
+        Independent k-point calculation, True or False, by default False.
+    thr_lindep : float, optional
+        Inverse of the condition number of basis sets. prep cuts the redundancy,
+        by default 1.0e-13.
+    kpoints : list, optional
+        k Monkhorst-Pack grids, [kx,ky,kz,nx,ny,nz], where kx,y,z are grids
+        and nx,y,z are shift (0) or no shift (1), by default [1, 1, 1, 0.0, 0].
+
+    Attributes
+    ----------
+    fort10 : str
+        Input fort.10 wavefunction file.
+    prep : Prep
+        Underlying pyturbo Prep instance.
     """
 
     def __init__(

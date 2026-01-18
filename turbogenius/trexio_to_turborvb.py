@@ -69,19 +69,45 @@ def trexio_to_turborvb_wf(
     cleanup: bool = True,
 ) -> None:
     """
-    Convert trexio file to TurboRVB WF file (fort.10)
+    Convert TREXIO file to TurboRVB wavefunction file (fort.10).
 
-    Args:
-        trexio_file (str): TREXIO file name
-        jas_basis_sets (Jas_basis_sets): Jastrow basis sets added to the TREXIO WF.
-        jastrow_1body (str): Jastrow 1-body function type.
-        jastrow_2body (str): Jastrow 2-body function type.
-        jastrow_4body (bool): If true, jastrow_4body is switched on.
-        max_occ_conv (int): maximum occ used for the conv, not used with mo_num
-        mo_num_conv (int): num mo used for the conv, not used with max occ
-        only_mol (bool): if True, only moleculer orbitals option = True in convertfort10mol
-        nosymmetry (bool): if True, nosym option in makefort10 is activated. The generated fort.10 w/o symmetry.
-        cleanup (bool): clean up temporary files
+    This function reads a TREXIO file and converts it to a TurboRVB
+    wavefunction file (fort.10), with options to add Jastrow basis sets
+    and configure various conversion parameters.
+
+    Parameters
+    ----------
+    trexio_file : str
+        TREXIO file name.
+    jas_basis_sets : Jas_Basis_sets, optional
+        Jastrow basis sets added to the TREXIO wavefunction. If None,
+        an empty Jas_Basis_sets is used, by default None.
+    jastrow_1body : str, optional
+        Jastrow 1-body function type, by default None.
+    jastrow_2body : str, optional
+        Jastrow 2-body function type, by default None.
+    jastrow_4body : bool, optional
+        If True, jastrow_4body is switched on, by default False.
+    max_occ_conv : int, optional
+        Maximum occupation used for the conversion. Not used with mo_num_conv,
+        by default 0.
+    mo_num_conv : int, optional
+        Number of molecular orbitals used for the conversion. Not used with
+        max_occ_conv, by default -1.
+    only_mol : bool, optional
+        If True, only molecular orbitals option = True in convertfort10mol,
+        by default True.
+    nosymmetry : bool, optional
+        If True, nosym option in makefort10 is activated. The generated
+        fort.10 will be without symmetry, by default False.
+    cleanup : bool, optional
+        Clean up temporary files, by default True.
+
+    Notes
+    -----
+    The function generates several intermediate files during the conversion
+    process. If cleanup is True, these files are removed after successful
+    conversion.
     """
     if jas_basis_sets is None:
         jas_basis_sets = Jas_Basis_sets()
@@ -1174,6 +1200,17 @@ def trexio_to_turborvb_wf(
 
 
 def main():
+    """
+    Main function for command-line interface.
+
+    Sets up argument parsing for converting TREXIO files to TurboRVB
+    wavefunction files and calls trexio_to_turborvb_wf() with the parsed
+    arguments.
+
+    Notes
+    -----
+    This function is called when the script is run directly from the command line.
+    """
     # parser.add_argument
     from database_setup import (
         all_electron_basis_set_list,

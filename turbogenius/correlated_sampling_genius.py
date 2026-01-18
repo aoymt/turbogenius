@@ -28,19 +28,46 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 class Correlated_sampling_genius(GeniusIO):
     """
+    Wrapper class for correlated sampling calculations.
 
-    This class is a wrapper of pyturbo LRDMC class
+    This class provides a high-level interface for performing correlated
+    sampling calculations using VMC and readforward programs. It is useful
+    for comparing wavefunctions and computing energy differences.
 
-    Attributes:
-         in_fort10 (str): fort.10 WF file
-         corr_fort10 (str): fort.10 WF file
-         vmcsteps (int): total number of MCMC steps.
-         bin_block (int): binning length
-         warmupblocks (int): the number of disregarded blocks
-         num_walkers (int): The number of walkers, -1 (default) = the number of MPI processes
-         maxtime (int): Maxtime (sec.)
-         twist_average (bool): Twist average flag, True or False
-         kpoints (list): k Monkhorst-Pack grids, [kx,ky,kz,nx,ny,nz], kx,y,z-> grids, nx,y,z-> shift=0, noshift=1.
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10_in".
+    corr_fort10 : str, optional
+        Reference fort.10 wavefunction file for correlated sampling,
+        by default "fort.10_corr".
+    vmcsteps : int, optional
+        Total number of MCMC steps, by default 100.
+    bin_block : int, optional
+        Binning length for correlation function analysis, by default 10.
+    warmupblocks : int, optional
+        Number of disregarded blocks at the beginning, by default 2.
+    num_walkers : int, optional
+        Number of walkers. If -1, uses the number of MPI processes,
+        by default -1.
+    maxtime : int, optional
+        Maximum time in seconds, by default 172800.
+    twist_average : bool, optional
+        Twist average flag, True or False, by default False.
+    kpoints : list, optional
+        k Monkhorst-Pack grids, [kx,ky,kz,nx,ny,nz], where kx,y,z are grids
+        and nx,y,z are shift (0) or no shift (1), by default [1, 1, 1, 0, 0, 0].
+
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    corr_fort10 : str
+        Reference fort.10 wavefunction file.
+    vmc : VMC
+        Underlying pyturbo VMC instance.
+    readforward : Readforward
+        Underlying pyturbo Readforward instance.
     """
 
     def __init__(
@@ -196,11 +223,14 @@ class Correlated_sampling_genius(GeniusIO):
         """
         Generate input files and run the command.
 
-        Args:
-            input_name (str): input file name
-            vmc_output_name (str): vmc output file name
-            readforward_output_name (str): readforward output file name
-
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "datasvmc.input".
+        vmc_output_name : str, optional
+            VMC output file name, by default "out_vmc".
+        readforward_output_name : str, optional
+            Readforward output file name, by default "out_readforward".
         """
         self.vmc.generate_input(input_name=input_name)
         self.vmc.run(input_name=input_name, output_name=vmc_output_name)
@@ -213,9 +243,10 @@ class Correlated_sampling_genius(GeniusIO):
         """
         Generate input file.
 
-        Args:
-            input_name (str): input file name
-
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "datasvmc.input".
         """
         self.vmc.generate_input(input_name=input_name)
         self.readforward.generate_input(input_name="readforward.input")
@@ -229,10 +260,19 @@ class Correlated_sampling_genius(GeniusIO):
         """
         Run the command.
 
-        Args:
-            input_name (str): input file name
-            vmc_output_name (str): vmc output file name
-            readforward_output_name (str): readforward output file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "datasvmc.input".
+        vmc_output_name : str, optional
+            VMC output file name, by default "out_vmc".
+        readforward_output_name : str, optional
+            Readforward output file name, by default "out_readforward".
+
+        Raises
+        ------
+        AssertionError
+            If the calculation does not complete successfully.
         """
         self.vmc.run(input_name=input_name, output_name=vmc_output_name)
         flags = self.vmc.check_results(output_names=[vmc_output_name])
@@ -253,11 +293,20 @@ class Correlated_sampling_genius(GeniusIO):
         """
         Check the result.
 
-        Args:
-            vmc_output_names (list): a list of output file names
-            readforward_output_names (list): a list of output file names
-        Returns:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        vmc_output_names : list, optional
+            A list of VMC output file names to check. If None, defaults to
+            ["out_vmc"], by default None.
+        readforward_output_names : list, optional
+            A list of readforward output file names to check. If None,
+            defaults to ["out_readforward"], by default None.
+
+        Returns
+        -------
+        bool
+            True if all the runs were successful, False if an error is
+            detected in the files.
         """
         if vmc_output_names is None:
             vmc_output_names = ["out_vmc"]

@@ -28,6 +28,31 @@ logger = getLogger("pyturbo").getChild(__name__)
 def run(
     binary: str, input_name: Optional[str] = None, output_name: str = "out.o"
 ):
+    """
+    Execute a TurboRVB binary command.
+
+    Parameters
+    ----------
+    binary : str
+        Binary command to execute (e.g., "makefort10.x" or full path).
+    input_name : str, optional
+        Input file name. If None, no input redirection is used, by default None.
+    output_name : str, optional
+        Output file name, by default "out.o".
+
+    Notes
+    -----
+    On macOS (darwin), the function handles LD_LIBRARY_PATH and
+    DYLD_LIBRARY_PATH environment variables based on the shell type.
+    The command is executed using subprocess.check_call().
+
+    Raises
+    ------
+    subprocess.CalledProcessError
+        If the command execution fails.
+    NotImplementedError
+        If the shell type is not supported on macOS.
+    """
     sys_env = os.environ.copy()
     if input_name is None:
         cmd = f"{binary} > {output_name}"

@@ -39,12 +39,60 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 class LRDMC(FortranIO):
+    """
+    Wrapper class for TurboRVB LRDMC (Lattice Regularized Diffusion Monte Carlo) program.
+
+    This class provides an interface to perform LRDMC calculations, which is
+    a projector Monte Carlo method for obtaining ground-state properties.
+
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10".
+    namelist : Namelist, optional
+        Namelist object containing program parameters. If None, an empty
+        Namelist is created, by default None.
+    twist_average : bool or int, optional
+        Twist average flag. False or 0: single-k point, True or 1: Monkhorst-Pack,
+        2: manual k-grid, by default False.
+
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    namelist : Namelist
+        Namelist object containing program parameters.
+    twist_average : bool or int
+        Twist average flag.
+    manual_kpoints : list
+        Manual k-points list (set via property setter).
+    """
+
     def __init__(
         self,
         in_fort10: str = "fort.10",
         namelist: Optional[Namelist] = None,
         twist_average: bool = False,
     ):
+        """
+        Initialize the LRDMC class.
+
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10".
+        namelist : Namelist, optional
+            Namelist object containing program parameters. If None, an empty
+            Namelist is created, by default None.
+        twist_average : bool or int, optional
+            Twist average flag. False or 0: single-k point, True or 1: Monkhorst-Pack,
+            2: manual k-grid, by default False.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the fort.10 file or pseudo.dat (if needed) is not found.
+        """
         if namelist is None:
             namelist = Namelist()
 
@@ -65,10 +113,38 @@ class LRDMC(FortranIO):
 
     @property
     def manual_kpoints(self):
+        """
+        Get manual k-points.
+
+        Returns
+        -------
+        list
+            List of manual k-points. Format: [[kpoints_up], [kpoints_dn]],
+            where each kpoint is [kx, ky, kz, wkp].
+        """
         return self.__manual_kpoints
 
     @manual_kpoints.setter
     def manual_kpoints(self, kpoints):
+        """
+        Set manual k-points.
+
+        Parameters
+        ----------
+        kpoints : list
+            List of manual k-points. Format: [[kpoints_up], [kpoints_dn]],
+            where each kpoint is [kx, ky, kz, wkp].
+
+        Raises
+        ------
+        AssertionError
+            If the k-points format is invalid.
+
+        Notes
+        -----
+        This setter automatically configures the namelist for manual k-points
+        when twist_average == 2.
+        """
         assert len(kpoints) == 2
         kpoints_up, kpoints_dn = kpoints
         assert len(kpoints_up) == len(kpoints_dn)
@@ -89,16 +165,49 @@ class LRDMC(FortranIO):
         )
 
     def __str__(self):
+        """
+        Return string representation of the LRDMC object.
 
+        Returns
+        -------
+        str
+            String description of the object.
+        """
         output = [
             "TurboRVB lrdmc python wrapper",
         ]
         return "\n".join(output)
 
     def sanity_check(self):
+        """
+        Perform sanity checks on the input parameters.
+
+        Notes
+        -----
+        This method is a placeholder and does nothing. It should be
+        implemented to validate input parameters.
+        """
         pass
 
     def generate_input(self, input_name: str = "datasfn.input"):
+        """
+        Generate input file for the LRDMC program.
+
+        Parameters
+        ----------
+        input_name : str, optional
+            Output input file name, by default "datasfn.input".
+
+        Raises
+        ------
+        ValueError
+            If no suitable position for KPOINT is found when using manual k-points.
+
+        Notes
+        -----
+        If twist_average == 2 (manual k-points), the k-points are inserted
+        into the input file at the appropriate location.
+        """
         self.namelist.write(input_name)
         # check if twist_average is manual
         if self.twist_average == 2:  # k-points are set manually
@@ -136,6 +245,26 @@ class LRDMC(FortranIO):
         logger.info(f"{input_name} has been generated.")
 
     def run(self, input_name="datasfn.input", output_name="out_fn"):
+        """
+        Run the LRDMC program.
+
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "datasfn.input".
+        output_name : str, optional
+            Output file name, by default "out_fn".
+
+        Notes
+        -----
+        This method removes existing output files (pip0_fn.d, forces_fn.dat)
+        before running the calculation.
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            If the program execution fails.
+        """
         remove_file(file="pip0_fn.d")
         remove_file(file="forces_fn.dat")
         run(
@@ -145,6 +274,21 @@ class LRDMC(FortranIO):
         )
 
     def check_results(self, output_names: Optional[list] = None):
+        """
+        Check the results of the LRDMC program execution.
+
+        Parameters
+        ----------
+        output_names : list, optional
+            List of output file names to check. If None, defaults to
+            ["out_fn"], by default None.
+
+        Returns
+        -------
+        list of bool
+            List of boolean flags indicating success for each output file.
+            True if the file contains "Final.*tstep.*found", False otherwise.
+        """
         if output_names is None:
             output_names = ["out_fn"]
         flags = []

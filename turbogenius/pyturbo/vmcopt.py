@@ -49,12 +49,61 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 class VMCopt(FortranIO):
+    """
+    Wrapper class for TurboRVB VMCopt (VMC optimization) program.
+
+    This class provides an interface to optimize wavefunction parameters
+    using VMC, with support for various optimization strategies and
+    parameter types.
+
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10".
+    namelist : Namelist, optional
+        Namelist object containing program parameters. If None, an empty
+        Namelist is created, by default None.
+    twist_average : bool or int, optional
+        Twist average flag. False or 0: single-k point, True or 1: Monkhorst-Pack,
+        2: manual k-grid, by default False.
+
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    namelist : Namelist
+        Namelist object containing program parameters.
+    twist_average : bool or int
+        Twist average flag.
+    manual_kpoints : list
+        Manual k-points list (set via property setter).
+    """
+
     def __init__(
         self,
         in_fort10: str = "fort.10",
         namelist: Optional[Namelist] = None,
         twist_average: bool = False,  # False or 0: single-k, True or 1: Monkhorst-Pack, 2: manual k-grid
     ):
+        """
+        Initialize the VMCopt class.
+
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10".
+        namelist : Namelist, optional
+            Namelist object containing program parameters. If None, an empty
+            Namelist is created, by default None.
+        twist_average : bool or int, optional
+            Twist average flag. False or 0: single-k point, True or 1: Monkhorst-Pack,
+            2: manual k-grid, by default False.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the fort.10 file or pseudo.dat (if needed) is not found.
+        """
         if namelist is None:
             namelist = Namelist()
 
@@ -74,10 +123,38 @@ class VMCopt(FortranIO):
 
     @property
     def manual_kpoints(self):
+        """
+        Get manual k-points.
+
+        Returns
+        -------
+        list
+            List of manual k-points. Format: [[kpoints_up], [kpoints_dn]],
+            where each kpoint is [kx, ky, kz, wkp].
+        """
         return self.__manual_kpoints
 
     @manual_kpoints.setter
     def manual_kpoints(self, kpoints):
+        """
+        Set manual k-points.
+
+        Parameters
+        ----------
+        kpoints : list
+            List of manual k-points. Format: [[kpoints_up], [kpoints_dn]],
+            where each kpoint is [kx, ky, kz, wkp].
+
+        Raises
+        ------
+        AssertionError
+            If the k-points format is invalid.
+
+        Notes
+        -----
+        This setter automatically configures the namelist for manual k-points
+        when twist_average == 2.
+        """
         assert len(kpoints) == 2
         kpoints_up, kpoints_dn = kpoints
         assert len(kpoints_up) == len(kpoints_dn)
@@ -97,16 +174,49 @@ class VMCopt(FortranIO):
         )
 
     def __str__(self):
+        """
+        Return string representation of the VMCopt object.
 
+        Returns
+        -------
+        str
+            String description of the object.
+        """
         output = [
             "TurboRVB vmcopt python wrapper",
         ]
         return "\n".join(output)
 
     def sanity_check(self):
+        """
+        Perform sanity checks on the input parameters.
+
+        Notes
+        -----
+        This method is a placeholder and does nothing. It should be
+        implemented to validate input parameters.
+        """
         pass
 
     def generate_input(self, input_name: str = "datasmin.input"):
+        """
+        Generate input file for the VMCopt program.
+
+        Parameters
+        ----------
+        input_name : str, optional
+            Output input file name, by default "datasmin.input".
+
+        Raises
+        ------
+        ValueError
+            If no suitable position for KPOINT is found when using manual k-points.
+
+        Notes
+        -----
+        If twist_average == 2 (manual k-points), the k-points are inserted
+        into the input file at the appropriate location.
+        """
         self.namelist.write(input_name)
         # check if twist_average is manual
         if self.twist_average == 2:  # k-points are set manually

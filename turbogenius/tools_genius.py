@@ -35,12 +35,21 @@ def copy_jastrow(
     twist_flag: bool = False,
 ):
     """
-    Copy Jastrow factors
+    Copy Jastrow factors from one fort.10 file to another.
 
-    Args:
-        fort10_to (str): fort.10 to which jastrow factor is copied.
-        fort10_from (str): fort.10 form which jastrow factor is copied.
-        twist_flag (bool): twist average or not.
+    Parameters
+    ----------
+    fort10_to : str, optional
+        Fort.10 file to which Jastrow factor is copied, by default "fort.10".
+    fort10_from : str, optional
+        Fort.10 file from which Jastrow factor is copied, by default "fort.10_new".
+    twist_flag : bool, optional
+        If True, perform twist-averaged copy, by default False.
+
+    Notes
+    -----
+    This function uses the turbo_copyjas_command to copy Jastrow factors.
+    If twist_flag is True, additional operations are performed for twist averaging.
     """
     current_dir = os.getcwd()
     file_check(fort10_from)
@@ -58,7 +67,21 @@ def copy_jastrow(
 
 def copy_jastrow_twist():
     """
-    Copy Jastrow factors with twist in turborvb.scratch
+    Copy Jastrow factors with twist averaging in turborvb.scratch directory.
+
+    This function performs additional operations needed for averaging Jastrow
+    matrices with k-point averaging. It copies necessary files to the
+    turborvb.scratch directory and runs copyjas.x with kpoints option.
+
+    Notes
+    -----
+    The function requires the following files to exist:
+    - kp_info.dat
+    - parminimized.d
+    - turborvb.scratch directory
+    - fort.10
+
+    The function changes the working directory to turborvb.scratch during execution.
     """
 
     logger.info(

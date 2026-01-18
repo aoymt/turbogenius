@@ -142,11 +142,53 @@ class Value:
 
 class IO_fort10:
     """
-    This class is a wrapper for python fort.10 file
+    Wrapper class for TurboRVB fort.10 wavefunction file.
 
-    Attributes:
-        fort.10 (str): the name of fort.10 WF file
-        in_place (bool): if True, fort.10 file is updated whenever fort10 instance is updated.
+    This class provides an interface to read, write, and manipulate
+    TurboRVB wavefunction files (fort.10 format).
+
+    Parameters
+    ----------
+    fort10 : str, optional
+        Path to the fort.10 wavefunction file, by default "fort.10".
+    in_place : bool, optional
+        If True, the fort.10 file is updated whenever the instance is modified.
+        If False, changes are only written when explicitly saved, by default True.
+
+    Attributes
+    ----------
+    fort10 : str
+        Path to the fort.10 wavefunction file.
+    in_place : bool
+        Flag indicating if changes are written immediately to the file.
+    f10header : F10header
+        Header information from fort.10 file.
+    f10structure : F10structure
+        Structure information (atomic positions, cell vectors).
+    f10forceconstraint : F10forceconstraint
+        Force constraint information.
+    f10jastwobody : F10jastwobody
+        Jastrow two-body parameters.
+    f10detbasissets : F10detbasissets
+        Determinant basis sets.
+    f10jasbasissets : F10jasbasissets
+        Jastrow basis sets.
+    f10detocc : F10occ
+        Determinant occupation numbers.
+    f10jasocc : F10occ
+        Jastrow occupation numbers.
+    f10detmat : F10detmat
+        Determinant matrix.
+    f10jasmat : F10jasmat
+        Jastrow matrix.
+    pp_flag : bool
+        Pseudopotential flag (property).
+
+    Notes
+    -----
+    The fort.10 file format is the standard wavefunction format for TurboRVB.
+    This class provides access to all sections of the fort.10 file through
+    specialized subclasses (F10header, F10structure, etc.).
     """
 
     __f10structure_start_keyword = "Ion coordinates"
@@ -185,7 +227,22 @@ class IO_fort10:
     __f10jasbasis_sym_end_keyword = "New parameters *$"
 
     def __init__(self, fort10: str = "fort.10", in_place: bool = True):
+        """
+        Initialize the IO_fort10 class.
 
+        Parameters
+        ----------
+        fort10 : str, optional
+            Path to the fort.10 wavefunction file, by default "fort.10".
+        in_place : bool, optional
+            If True, the fort.10 file is updated whenever the instance is modified.
+            If False, changes are only written when explicitly saved, by default True.
+
+        Notes
+        -----
+        This method initializes all subclasses (F10header, F10structure, etc.)
+        to provide access to different sections of the fort.10 file.
+        """
         self.fort10 = fort10
         self.in_place = in_place
         self.f10header = F10header(fort10=self.fort10, in_place=self.in_place)

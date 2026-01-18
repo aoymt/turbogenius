@@ -38,6 +38,30 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 class ccECP:
+    """
+    Class for downloading ccECP basis sets and pseudo potentials.
+
+    This class provides functionality to download ccECP (correlation consistent
+    Effective Core Potential) basis sets and pseudo potentials from the
+    QMCPACK pseudopotential library.
+
+    Attributes
+    ----------
+    C_URL : str
+        URL of the ccECP repository.
+    list_of_basis_all : list
+        List of all available basis sets (cc-pVDZ, cc-pVTZ, cc-pVQZ, etc.).
+
+    Parameters
+    ----------
+    basis_sets_output_dir : str, optional
+        Output directory for basis sets. If None, basis sets are not saved,
+        by default None.
+    pseudo_potential_output_dir : str, optional
+        Output directory for pseudo potentials. If None, pseudo potentials
+        are not saved, by default None.
+    """
+
     C_URL = "https://github.com/QMCPACK/pseudopotentiallibrary.git"
     list_of_basis_all = [f"cc-pV{s}Z" for s in "DTQ56"]
     list_of_basis_all += [f"ang-{x}" for x in list_of_basis_all]
@@ -148,6 +172,29 @@ class ccECP:
 
 
 class BSE:
+    """
+    Class for downloading basis sets from Basis Set Exchange (BSE).
+
+    This class provides functionality to download all-electron basis sets
+    from the Basis Set Exchange website.
+
+    Attributes
+    ----------
+    list_of_basis_all : list
+        List of all available basis sets (cc-pVDZ, cc-pVTZ, cc-pVQZ, etc.).
+
+    Parameters
+    ----------
+    basis_sets_output_dir : str, optional
+        Output directory for basis sets. If None, basis sets are not saved,
+        by default None.
+    pseudo_potential_output_dir : str, optional
+        Not used for BSE (all-electron only), by default None.
+
+    Notes
+    -----
+    BSE URL: https://www.basissetexchange.org
+    """
     # URL: https://www.basissetexchange.org
     list_of_basis_all = [f"cc-pV{s}Z" for s in "DTQ56"]
     list_of_basis_all += [f"ang-{x}" for x in list_of_basis_all]
@@ -204,6 +251,29 @@ class BSE:
 
 
 class BFD:
+    """
+    Class for downloading BFD basis sets and pseudo potentials.
+
+    This class provides functionality to download BFD (Burkatzki-Filippi-Dolg)
+    basis sets and pseudo potentials from the BFD-ECP repository.
+
+    Attributes
+    ----------
+    C_URL : str
+        URL of the BFD-ECP repository.
+    list_of_basis_all : list
+        List of all available basis sets (vdz, vtz, vqz, v5z, v6z).
+
+    Parameters
+    ----------
+    basis_sets_output_dir : str, optional
+        Output directory for basis sets. If None, basis sets are not saved,
+        by default None.
+    pseudo_potential_output_dir : str, optional
+        Output directory for pseudo potentials. If None, pseudo potentials
+        are not saved, by default None.
+    """
+
     C_URL = "https://github.com/TREX-CoE/BFD-ECP.git"
     list_of_basis_all = [f"v{s}z" for s in "dtq56"]
 

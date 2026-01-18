@@ -41,10 +41,22 @@ logger = getLogger("Turbo-Genius").getChild(__name__)
 
 class Wavefunction:
     """
+    Class for manipulating fort.10 wavefunction files.
 
-    This class is for manipulating fort.10 using pyturbo IO_fort.10 class.
+    This class provides a high-level interface to read, convert, and manipulate
+    wavefunction files in various formats (TurboRVB, TREXIO) using the
+    pyturbo IO_fort10 class.
 
-
+    Attributes
+    ----------
+    read_flag : bool
+        Flag indicating whether a wavefunction has been read.
+    wf_format : str or None
+        Wavefunction format: "turborvb" or "trexio".
+    trexio_filename : str or None
+        Name of the TREXIO file (if read from TREXIO).
+    io_fort10 : IO_fort10 or None
+        IO_fort10 instance for reading fort.10 files.
     """
 
     def __init__(self):
@@ -55,12 +67,17 @@ class Wavefunction:
 
     def read_from_fort10(self, fort10: str) -> None:
         """
+        Read wavefunction from fort.10 file.
 
-        Read WF from fort.10 file
+        Parameters
+        ----------
+        fort10 : str
+            Name of a wavefunction file (usually fort.10).
 
-        Attributes:
-            fort10 (str): name of a WF file (usually fort.10)
-
+        Notes
+        -----
+        If the file is not named "fort.10", it will be copied to "fort.10"
+        in the current directory.
         """
         if fort10 != "fort.10":
             try:
@@ -83,15 +100,31 @@ class Wavefunction:
         cleanup: bool = True,
     ) -> None:
         """
-        Convert trexio file to TurboRVB WF file (fort.10)
+        Convert TREXIO file to TurboRVB wavefunction file (fort.10).
 
-        Args:
-            trexio_file (str): TREXIO file name
-            jas_basis_sets (Jas_basis_sets): Jastrow basis sets added to the TREXIO WF.
-            max_occ_conv (int): maximum occ used for the conv, not used with mo_num
-            mo_num_conv (int): num mo used for the conv, not used with max occ
-            only_mol (bool): if True, only moleculer orbitals option = True in convertfort10mol
-            cleanup (bool): clean up temporary files
+        Parameters
+        ----------
+        trexio_filename : str
+            TREXIO file name.
+        jas_basis_sets : Jas_Basis_sets, optional
+            Jastrow basis sets added to the TREXIO wavefunction,
+            by default Jas_Basis_sets().
+        max_occ_conv : int, optional
+            Maximum occupation used for the conversion. Not used with mo_num_conv,
+            by default 0.
+        mo_num_conv : int, optional
+            Number of molecular orbitals used for the conversion. Not used with
+            max_occ_conv, by default -1.
+        only_mol : bool, optional
+            If True, only molecular orbitals option = True in convertfort10mol,
+            by default True.
+        cleanup : bool, optional
+            Clean up temporary files, by default True.
+
+        Notes
+        -----
+        This method will overwrite any existing fort.10 file in the current
+        directory.
         """
 
         if os.path.isfile("fort.10"):
@@ -131,26 +164,59 @@ class Wavefunction:
         neldiff: int = 0,
     ):
         """
+        Generate wavefunction from structure file.
 
-        This class is a wrapper of pyturbo makefort10 class
+        This method is a wrapper of pyturbo makefort10 class. It generates
+        a wavefunction file from a structure file and converts it to SD format.
 
-        Attributes:
-            structure_file (str): File name of the input structure, formats suppored by ASE are supported.
-            supercell (list):  3 integers, supercell sizes [x,y,z]
-            det_basis_set (str or list): basis set for the determinant part: e.g., "cc-pVQZ" (str), a list of gamess format basis sets is accepatable.
-            jas_basis_set (str or list): basis set for the Jastrow part: e.g., "cc-pVQZ" (str), a list of gamess format basis sets is accepatable.
-            det_contracted_flag (bool): if True determinant basis set is contracted, if False determinant basis set is uncontracted.
-            jas_contracted_flag (bool): if True Jastrow basis set is contracted, if False Jastrow basis set is uncontracted.
-            all_electron_jas_basis_set (bool): if True Jastrow basis set is read from the specified all-electron basis, if False, pseudo potential ones.
-            pseudo_potential (str, list or None): if None, all-electron calculations, if "str", the corresponding PP is read from the database.
-            det_cut_basis_option (bool): if True, determinant basis set is cut according to the Andrea Zen's procedure.
-            jas_cut_basis_option (bool): if True, Jastrow basis set is cut according to the Andrea Zen's procedure.
-            jastrow_type (int): One- and Two- Jastrow type specified.
-            complex (bool): if True, the WF is complex, if False, the WF is real.
-            phase_up (list): 3-float numbers for the up-phase [x, y, z].
-            phase_dn (list): 3-float numbers for the dn-phase [x, y, z].
-            same_phase_up_dn (bool): forced phase up == phase dn (valid only for gamma point.) it is automatically detected for other points.
-            neldiff (int): The number of difference between up and dn electrons.
+        Parameters
+        ----------
+        structure_file : str
+            File name of the input structure. Formats supported by ASE are supported.
+        supercell : list, optional
+            3 integers, supercell sizes [x, y, z], by default [1, 1, 1].
+        det_basis_set : str or list, optional
+            Basis set for the determinant part. Can be a string (e.g., "cc-pVQZ")
+            or a list of GAMESS format basis sets, by default "cc-pVQZ".
+        jas_basis_set : str or list, optional
+            Basis set for the Jastrow part. Can be a string (e.g., "cc-pVQZ")
+            or a list of GAMESS format basis sets, by default "cc-pVQZ".
+        det_contracted_flag : bool, optional
+            If True, determinant basis set is contracted. If False, uncontracted,
+            by default True.
+        jas_contracted_flag : bool, optional
+            If True, Jastrow basis set is contracted. If False, uncontracted,
+            by default True.
+        all_electron_jas_basis_set : bool, optional
+            If True, Jastrow basis set is read from the specified all-electron basis.
+            If False, pseudo potential ones, by default True.
+        pseudo_potential : str or None, optional
+            If None, all-electron calculations. If str, the corresponding PP is read
+            from the database, by default None.
+        det_cut_basis_option : bool, optional
+            If True, determinant basis set is cut according to Andrea Zen's procedure,
+            by default False.
+        jas_cut_basis_option : bool, optional
+            If True, Jastrow basis set is cut according to Andrea Zen's procedure,
+            by default False.
+        jastrow_type : int, optional
+            One- and two-body Jastrow type specified, by default -6.
+        complex : bool, optional
+            If True, the wavefunction is complex. If False, real, by default False.
+        phase_up : list, optional
+            3-float numbers for the up-phase [x, y, z], by default [0.0, 0.0, 0.0].
+        phase_dn : list, optional
+            3-float numbers for the dn-phase [x, y, z], by default [0.0, 0.0, 0.0].
+        same_phase_up_dn : bool, optional
+            Forced phase up == phase dn (valid only for gamma point). It is
+            automatically detected for other points, by default False.
+        neldiff : int, optional
+            Number of difference between up and dn electrons, by default 0.
+
+        Notes
+        -----
+        The generated fort.10 has random MO coefficients and should be
+        initialized by DFT.
         """
 
         if os.path.isfile("fort.10"):
@@ -471,7 +537,7 @@ class Wavefunction:
         else:
             pseudo_potentials = Pseudopotentials()
         det_basis_sets = self.io_fort10.f10detbasissets.det_basis_sets
-        logger.debug(f'det_basis_sets.hyb_nucleus_index = {det_basis_sets.hyb_nucleus_index}')
+        print(f'det_basis_sets.hyb_nucleus_index = {det_basis_sets.hyb_nucleus_index}')
         jas_basis_sets = self.io_fort10.f10jasbasissets.jas_basis_sets
 
         # add number of hybrid orbitals

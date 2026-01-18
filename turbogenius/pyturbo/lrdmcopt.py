@@ -46,6 +46,37 @@ logger = getLogger("pyturbo").getChild(__name__)
 
 
 class LRDMCopt(FortranIO):
+    """
+    Wrapper class for TurboRVB LRDMCopt (LRDMC optimization) program.
+
+    This class provides an interface to optimize wavefunction parameters
+    using LRDMC, with support for various optimization strategies.
+
+    Parameters
+    ----------
+    in_fort10 : str, optional
+        Input fort.10 wavefunction file, by default "fort.10".
+    namelist : Namelist, optional
+        Namelist object containing program parameters. If None, an empty
+        Namelist is created, by default None.
+    pp_flag : bool, optional
+        Pseudopotential flag (currently not used), by default False.
+    twist_average : bool or int, optional
+        Twist average flag. False or 0: single-k point, True or 1: Monkhorst-Pack,
+        2: manual k-grid, by default False.
+
+    Attributes
+    ----------
+    in_fort10 : str
+        Input fort.10 wavefunction file.
+    namelist : Namelist
+        Namelist object containing program parameters.
+    pp_flag : bool
+        Pseudopotential flag.
+    twist_average : bool or int
+        Twist average flag.
+    """
+
     def __init__(
         self,
         in_fort10: str = "fort.10",
@@ -53,6 +84,27 @@ class LRDMCopt(FortranIO):
         pp_flag: bool = False,
         twist_average: bool = False,
     ):
+        """
+        Initialize the LRDMCopt class.
+
+        Parameters
+        ----------
+        in_fort10 : str, optional
+            Input fort.10 wavefunction file, by default "fort.10".
+        namelist : Namelist, optional
+            Namelist object containing program parameters. If None, an empty
+            Namelist is created, by default None.
+        pp_flag : bool, optional
+            Pseudopotential flag (currently not used), by default False.
+        twist_average : bool or int, optional
+            Twist average flag. False or 0: single-k point, True or 1: Monkhorst-Pack,
+            2: manual k-grid, by default False.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the fort.10 file or pseudo.dat (if needed) is not found.
+        """
         if namelist is None:
             namelist = Namelist()
 
@@ -69,16 +121,39 @@ class LRDMCopt(FortranIO):
         self.twist_average = twist_average
 
     def __str__(self):
+        """
+        Return string representation of the LRDMCopt object.
 
+        Returns
+        -------
+        str
+            String description of the object.
+        """
         output = [
             "TurboRVB lrdmcopt python wrapper",
         ]
         return "\n".join(output)
 
     def sanity_check(self):
+        """
+        Perform sanity checks on the input parameters.
+
+        Notes
+        -----
+        This method is a placeholder and does nothing. It should be
+        implemented to validate input parameters.
+        """
         pass
 
     def generate_input(self, input_name: str):
+        """
+        Generate input file for the LRDMCopt program.
+
+        Parameters
+        ----------
+        input_name : str
+            Output input file name.
+        """
         self.namelist.write(input_name)
         logger.info(f"{input_name} has been generated. \n")
 
@@ -87,6 +162,25 @@ class LRDMCopt(FortranIO):
         input_name: str = "datasfn_opt.input",
         output_name: str = "out_fn_opt",
     ):
+        """
+        Run the LRDMCopt program.
+
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "datasfn_opt.input".
+        output_name : str, optional
+            Output file name, by default "out_fn_opt".
+
+        Notes
+        -----
+        This method removes the stop.dat file after running the calculation.
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            If the program execution fails.
+        """
         run(
             turbo_qmc_run_command,
             input_name=input_name,
@@ -95,6 +189,21 @@ class LRDMCopt(FortranIO):
         remove_file(file="stop.dat")
 
     def check_results(self, output_names: Optional[list] = None):
+        """
+        Check the results of the LRDMCopt program execution.
+
+        Parameters
+        ----------
+        output_names : list, optional
+            List of output file names to check. If None, defaults to
+            ["out_fn_opt"], by default None.
+
+        Returns
+        -------
+        list of bool
+            List of boolean flags indicating success for each output file.
+            True if the file contains "TurboRVB.*profiling", False otherwise.
+        """
         if output_names is None:
             output_names = ["out_fn_opt"]
         flags = []
