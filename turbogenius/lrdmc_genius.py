@@ -257,7 +257,7 @@ class LRDMC_genius(GeniusIO):
         output_name: str = "out_fn",
     ) -> None:
         """
-        Generate input files and run the command.
+        Generate input files and run the LRDMC calculation.
 
         Parameters
         ----------
@@ -274,6 +274,11 @@ class LRDMC_genius(GeniusIO):
             Input file name, by default "datasfn.input".
         output_name : str, optional
             Output file name, by default "out_fn".
+
+        Notes
+        -----
+        This method calls generate_input(), run(), and compute_energy_and_forces()
+        to complete the LRDMC calculation process.
         """
         self.generate_input(cont=cont, input_name=input_name)
         self.run(input_name=input_name, output_name=output_name)
@@ -287,7 +292,7 @@ class LRDMC_genius(GeniusIO):
         self, cont: bool = False, input_name: str = "datasfn.input"
     ) -> None:
         """
-        Generate input file.
+        Generate input file for the LRDMC program.
 
         Parameters
         ----------
@@ -296,6 +301,11 @@ class LRDMC_genius(GeniusIO):
             scratch (i.e., iopt=1), by default False.
         input_name : str, optional
             Input file name, by default "datasfn.input".
+
+        Notes
+        -----
+        This method generates the datasfn.input file based on the parameters
+        set during initialization.
         """
         if cont:
             self.lrdmc.set_parameter("iopt", 0, "&simulation")
@@ -305,7 +315,7 @@ class LRDMC_genius(GeniusIO):
         self, input_name: str = "datasfn.input", output_name: str = "out_fn"
     ) -> None:
         """
-        Run the command.
+        Run the LRDMC program.
 
         Parameters
         ----------
@@ -317,7 +327,13 @@ class LRDMC_genius(GeniusIO):
         Raises
         ------
         AssertionError
-            If the calculation does not complete successfully.
+            If the calculation does not complete successfully (check_results
+            indicates failure for any output file).
+
+        Notes
+        -----
+        This method executes the LRDMC program and then checks the results.
+        An AssertionError is raised if any output file indicates failure.
         """
         self.lrdmc.run(input_name=input_name, output_name=output_name)
         flags = self.lrdmc.check_results(output_names=[output_name])
@@ -332,7 +348,7 @@ class LRDMC_genius(GeniusIO):
         rerun: bool = False,
     ) -> None:
         """
-        Store results.
+        Store calculation results in instance attributes.
 
         This procedure stores estimated_time_for_1_generation, energy, and
         energy_error. This method is needed for storing data and accessing
@@ -347,11 +363,16 @@ class LRDMC_genius(GeniusIO):
         correcting_factor : int, optional
             Correcting factors, by default 2.
         output_names : list, optional
-            A list of output file names. If None, defaults to ["out_fn"],
+            List of output file names. If None, defaults to ["out_fn"],
             by default None.
         rerun : bool, optional
-            If True, compute energy and force again even if there are energy
-            and force files, by default False.
+            If True, compute energy again even if there are energy files,
+            by default False.
+
+        Notes
+        -----
+        The stored values can be accessed via self.energy, self.energy_error,
+        and self.estimated_time_for_1_generation attributes.
         """
         if output_names is None:
             output_names = ["out_fn"]
@@ -373,7 +394,7 @@ class LRDMC_genius(GeniusIO):
         rerun: bool = False,
     ) -> None:
         """
-        Compute energy and forces.
+        Compute energy and forces from LRDMC calculation results.
 
         Parameters
         ----------
@@ -386,6 +407,12 @@ class LRDMC_genius(GeniusIO):
         rerun : bool, optional
             If True, compute energy and force again even if there are energy
             and force files, by default False.
+
+        Notes
+        -----
+        This method computes energy and optionally forces (if force_calc_flag
+        is True) using the readforward program. Results are stored in
+        self.energy, self.energy_error, self.forces, and self.forces_error.
         """
         self.energy, self.energy_error = self.lrdmc.get_energy(
             init=warmupblocks,
@@ -398,18 +425,23 @@ class LRDMC_genius(GeniusIO):
         self, output_names: Optional[list] = None
     ) -> float:
         """
-        Get estimated time for one generation.
+        Get estimated time for one generation from output files.
 
         Parameters
         ----------
         output_names : list, optional
-            A list of output file names. If None, defaults to ["out_fn"],
+            List of output file names. If None, defaults to ["out_fn"],
             by default None.
 
         Returns
         -------
         float
-            Estimated time for one generation.
+            Estimated time for one generation in seconds.
+
+        Notes
+        -----
+        This method reads the output files and extracts the average time
+        for 1000 generations, then divides by 1000 to get the time per generation.
         """
         if output_names is None:
             output_names = ["out_fn"]
@@ -417,19 +449,24 @@ class LRDMC_genius(GeniusIO):
 
     def check_results(self, output_names: Optional[list] = None) -> bool:
         """
-        Check the result.
+        Check the results of the LRDMC program execution.
 
         Parameters
         ----------
         output_names : list, optional
-            A list of output file names to check. If None, defaults to
+            List of output file names to check. If None, defaults to
             ["out_fn"], by default None.
 
         Returns
         -------
         bool
             True if all the runs were successful, False if an error is
-            detected in the files.
+            detected in the output files.
+
+        Notes
+        -----
+        This method checks the output files for successful completion
+        by looking for specific patterns indicating successful execution.
         """
         if output_names is None:
             output_names = ["out_fn"]

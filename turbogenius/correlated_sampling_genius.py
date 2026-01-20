@@ -221,7 +221,7 @@ class Correlated_sampling_genius(GeniusIO):
         readforward_output_name: str = "out_readforward",
     ) -> None:
         """
-        Generate input files and run the command.
+        Generate input files and run the correlated sampling calculations.
 
         Parameters
         ----------
@@ -231,6 +231,11 @@ class Correlated_sampling_genius(GeniusIO):
             VMC output file name, by default "out_vmc".
         readforward_output_name : str, optional
             Readforward output file name, by default "out_readforward".
+
+        Notes
+        -----
+        This method runs both VMC and readforward programs sequentially
+        to perform correlated sampling calculations.
         """
         self.vmc.generate_input(input_name=input_name)
         self.vmc.run(input_name=input_name, output_name=vmc_output_name)
@@ -241,12 +246,17 @@ class Correlated_sampling_genius(GeniusIO):
 
     def generate_input(self, input_name: str = "datasvmc.input") -> None:
         """
-        Generate input file.
+        Generate input files for VMC and readforward programs.
 
         Parameters
         ----------
         input_name : str, optional
-            Input file name, by default "datasvmc.input".
+            Input file name for VMC, by default "datasvmc.input".
+
+        Notes
+        -----
+        This method generates both datasvmc.input (for VMC) and
+        readforward.input (for readforward) files.
         """
         self.vmc.generate_input(input_name=input_name)
         self.readforward.generate_input(input_name="readforward.input")
@@ -258,7 +268,7 @@ class Correlated_sampling_genius(GeniusIO):
         readforward_output_name: str = "out_readforward",
     ) -> None:
         """
-        Run the command.
+        Run the correlated sampling calculations.
 
         Parameters
         ----------
@@ -272,7 +282,13 @@ class Correlated_sampling_genius(GeniusIO):
         Raises
         ------
         AssertionError
-            If the calculation does not complete successfully.
+            If the calculation does not complete successfully (check_results
+            indicates failure for any output file).
+
+        Notes
+        -----
+        This method runs VMC first, then readforward. Both results are checked,
+        and an AssertionError is raised if either calculation fails.
         """
         self.vmc.run(input_name=input_name, output_name=vmc_output_name)
         flags = self.vmc.check_results(output_names=[vmc_output_name])
@@ -291,22 +307,27 @@ class Correlated_sampling_genius(GeniusIO):
         readforward_output_names: Optional[list] = None,
     ) -> bool:
         """
-        Check the result.
+        Check the results of the correlated sampling calculations.
 
         Parameters
         ----------
         vmc_output_names : list, optional
-            A list of VMC output file names to check. If None, defaults to
+            List of VMC output file names to check. If None, defaults to
             ["out_vmc"], by default None.
         readforward_output_names : list, optional
-            A list of readforward output file names to check. If None,
+            List of readforward output file names to check. If None,
             defaults to ["out_readforward"], by default None.
 
         Returns
         -------
         bool
             True if all the runs were successful, False if an error is
-            detected in the files.
+            detected in the output files.
+
+        Notes
+        -----
+        This method checks both VMC and readforward output files for
+        successful completion.
         """
         if vmc_output_names is None:
             vmc_output_names = ["out_vmc"]

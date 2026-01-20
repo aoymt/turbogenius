@@ -568,12 +568,23 @@ class Makefort10_genius(GeniusIO):
         basis_sets_unique_element: bool = True,
     ) -> None:
         """
-        Generate input files and run the command.
+        Generate input files and run the makefort10 command.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
-            basis_sets_unique_element (bool): if True, the same basis set is assigned for atoms with the same elemental type.
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "makefort10.input".
+        output_name : str, optional
+            Output file name, by default "out_make".
+        basis_sets_unique_element : bool, optional
+            If True, the same basis set is assigned for atoms with the same
+            elemental type. If False, different basis sets can be assigned
+            to atoms of the same element, by default True.
+
+        Notes
+        -----
+        This method calls generate_input() followed by run() to complete
+        the wavefunction generation process.
         """
         self.makefort10.generate_input(
             input_name=input_name,
@@ -587,11 +598,22 @@ class Makefort10_genius(GeniusIO):
         basis_sets_unique_element: bool = True,
     ) -> None:
         """
-        Generate input file.
+        Generate input file for the makefort10 program.
 
-        Args:
-            input_name (str): input file name
-            basis_sets_unique_element (bool): if True, the same basis set is assigned for atoms with the same elemental type.
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "makefort10.input".
+        basis_sets_unique_element : bool, optional
+            If True, the same basis set is assigned for atoms with the same
+            elemental type. If False, different basis sets can be assigned
+            to atoms of the same element, by default True.
+
+        Notes
+        -----
+        This method generates the makefort10.input file and pseudo.dat
+        (if pseudopotentials are used) based on the structure, basis sets,
+        and other parameters set during initialization.
         """
         self.makefort10.generate_input(
             input_name=input_name,
@@ -604,22 +626,47 @@ class Makefort10_genius(GeniusIO):
         output_name: str = "out_make",
     ) -> None:
         """
-        Run the command.
+        Run the makefort10 program.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "makefort10.input".
+        output_name : str, optional
+            Output file name, by default "out_make".
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            If the program execution fails.
+
+        Notes
+        -----
+        This method executes the makefort10 program to generate the fort.10
+        wavefunction file from the input structure and basis sets.
         """
         self.makefort10.run(input_name=input_name, output_name=output_name)
 
     def check_results(self, output_names: list = None) -> bool:
         """
-        Check the result.
+        Check the results of the makefort10 program execution.
 
-        Args:
-            output_names (list): a list of output file names
-        Return:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        output_names : list, optional
+            List of output file names to check. If None, defaults to
+            ["out_make"], by default None.
+
+        Returns
+        -------
+        bool
+            True if all the runs were successful, False if an error is
+            detected in the output files.
+
+        Notes
+        -----
+        This method checks the output files for successful completion
+        by looking for specific patterns indicating successful execution.
         """
         if output_names is None:
             output_names = ["out_make"]

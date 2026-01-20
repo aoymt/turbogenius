@@ -347,7 +347,7 @@ class LRDMCopt_genius(GeniusIO):
         average_parameters: bool = True,
     ) -> None:
         """
-        Generate input files and run the command.
+        Generate input files and run the LRDMC optimization.
 
         Parameters
         ----------
@@ -359,7 +359,13 @@ class LRDMCopt_genius(GeniusIO):
         output_name : str, optional
             Output file name, by default "out_fn_opt".
         average_parameters : bool, optional
-            If True, average the optimized parameters, by default True.
+            If True, average the optimized parameters after optimization,
+            by default True.
+
+        Notes
+        -----
+        This method calls generate_input(), run(), and optionally average()
+        to complete the LRDMC optimization process.
         """
         self.generate_input(cont=cont, input_name=input_name)
         self.run(input_name=input_name, output_name=output_name)
@@ -370,7 +376,7 @@ class LRDMCopt_genius(GeniusIO):
         self, cont: bool = False, input_name: str = "datasfn_opt.input"
     ) -> None:
         """
-        Generate input file.
+        Generate input file for the LRDMCopt program.
 
         Parameters
         ----------
@@ -379,6 +385,11 @@ class LRDMCopt_genius(GeniusIO):
             scratch (i.e., iopt=1), by default False.
         input_name : str, optional
             Input file name, by default "datasfn_opt.input".
+
+        Notes
+        -----
+        This method generates the datasfn_opt.input file based on the parameters
+        set during initialization.
         """
         io_fort10 = IO_fort10(fort10=self.fort10)
         io_fort10.io_flag = 0
@@ -392,7 +403,7 @@ class LRDMCopt_genius(GeniusIO):
         output_name: str = "out_fn_opt",
     ) -> None:
         """
-        Run the command.
+        Run the LRDMCopt program.
 
         Parameters
         ----------
@@ -404,7 +415,13 @@ class LRDMCopt_genius(GeniusIO):
         Raises
         ------
         AssertionError
-            If the calculation does not complete successfully.
+            If the calculation does not complete successfully (check_results
+            indicates failure for any output file).
+
+        Notes
+        -----
+        This method executes the LRDMCopt program and then checks the results.
+        An AssertionError is raised if any output file indicates failure.
         """
         self.lrdmcopt.run(input_name=input_name, output_name=output_name)
         flags = self.lrdmcopt.check_results(output_names=[output_name])
@@ -412,7 +429,7 @@ class LRDMCopt_genius(GeniusIO):
 
     def store_result(self, output_names: Optional[list] = None) -> None:
         """
-        Store results.
+        Store calculation results in instance attributes.
 
         Energy, energy_error, and estimated_time_for_1_generation are stored
         in this class.
@@ -420,8 +437,13 @@ class LRDMCopt_genius(GeniusIO):
         Parameters
         ----------
         output_names : list, optional
-            A list of output file names. If None, defaults to ["out_fn_opt"],
+            List of output file names. If None, defaults to ["out_fn_opt"],
             by default None.
+
+        Notes
+        -----
+        The stored values can be accessed via self.energy, self.energy_error,
+        and self.estimated_time_for_1_generation attributes.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -436,15 +458,21 @@ class LRDMCopt_genius(GeniusIO):
         interactive: bool = True,
     ):
         """
-        Plot energy and devmax.
+        Plot energy and devmax as a function of optimization steps.
 
         Parameters
         ----------
         output_names : list, optional
-            A list of output file names. If None, defaults to ["out_fn_opt"],
+            List of output file names. If None, defaults to ["out_fn_opt"],
             by default None.
         interactive : bool, optional
-            Flag for an interactive plot, by default True.
+            If True, display an interactive plot. If False, save to file,
+            by default True.
+
+        Notes
+        -----
+        This method creates plots showing the convergence of energy and
+        devmax during the optimization process.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -460,24 +488,29 @@ class LRDMCopt_genius(GeniusIO):
         output_names: Optional[list] = None,
     ) -> None:
         """
-        Average parameters of fort.10.
+        Average optimized parameters and update fort.10.
 
         Parameters
         ----------
         optwarmupsteps : int, optional
             Number of disregarded optimization steps, by default 10.
         graph_plot : bool, optional
-            Flag for plotting a graph, by default False.
+            If True, plot a graph of parameter convergence, by default False.
         input_name : str, optional
             Input file used in the latest calculation, by default "datasfn_opt.input".
         output_names : list, optional
-            A list of output file names. If None, defaults to ["out_fn_opt"],
+            List of output file names. If None, defaults to ["out_fn_opt"],
             by default None.
 
         Raises
         ------
         AssertionError
             If the calculation does not complete successfully.
+
+        Notes
+        -----
+        This method averages the optimized parameters over the last steps
+        (excluding warmup steps) and updates the fort.10 file.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -491,18 +524,22 @@ class LRDMCopt_genius(GeniusIO):
 
     def get_energy(self, output_names: Optional[list] = None) -> list:
         """
-        Get energy list.
+        Get energy history from optimization output files.
 
         Parameters
         ----------
         output_names : list, optional
-            A list of output file names. If None, defaults to ["out_fn_opt"],
+            List of output file names. If None, defaults to ["out_fn_opt"],
             by default None.
 
         Returns
         -------
         list
-            A list of history of energies.
+            List containing [energy, energy_error] extracted from the output files.
+
+        Notes
+        -----
+        This method reads the energy values from the optimization output files.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -512,18 +549,23 @@ class LRDMCopt_genius(GeniusIO):
         self, output_names: Optional[list] = None
     ) -> float:
         """
-        Get estimated time for one generation.
+        Get estimated time for one generation from output files.
 
         Parameters
         ----------
         output_names : list, optional
-            A list of output file names. If None, defaults to ["out_fn_opt"],
+            List of output file names. If None, defaults to ["out_fn_opt"],
             by default None.
 
         Returns
         -------
         float
-            Estimated time for one generation.
+            Estimated time for one generation in seconds.
+
+        Notes
+        -----
+        This method reads the output files and extracts the average time
+        for 1000 generations, then divides by 1000 to get the time per generation.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -533,19 +575,24 @@ class LRDMCopt_genius(GeniusIO):
 
     def check_results(self, output_names: Optional[list] = None) -> bool:
         """
-        Check the result.
+        Check the results of the LRDMCopt program execution.
 
         Parameters
         ----------
         output_names : list, optional
-            A list of output file names to check. If None, defaults to
+            List of output file names to check. If None, defaults to
             ["out_fn_opt"], by default None.
 
         Returns
         -------
         bool
             True if all the runs were successful, False if an error is
-            detected in the files.
+            detected in the output files.
+
+        Notes
+        -----
+        This method checks the output files for successful completion
+        by looking for specific patterns indicating successful execution.
         """
         if output_names is None:
             output_names = ["out_fn_opt"]
@@ -558,7 +605,13 @@ class LRDMCopt_genius(GeniusIO):
         Parameters
         ----------
         interactive : bool, optional
-            Flag for an interactive plot, by default True.
+            If True, display an interactive plot. If False, save to file,
+            by default True.
+
+        Notes
+        -----
+        This method creates plots showing the evolution of variational parameters
+        during the optimization process.
         """
         self.lrdmcopt.plot_parameters_history(interactive=interactive)
 

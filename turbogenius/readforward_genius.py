@@ -128,7 +128,7 @@ class Readforward_genius(GeniusIO):
         output_name: str = "out_readforward",
     ) -> None:
         """
-        Run the command.
+        Run the readforward program.
 
         Parameters
         ----------
@@ -140,7 +140,13 @@ class Readforward_genius(GeniusIO):
         Raises
         ------
         AssertionError
-            If the calculation does not complete successfully.
+            If the calculation does not complete successfully (check_results
+            indicates failure for any output file).
+
+        Notes
+        -----
+        This method executes the readforward program and then checks the results.
+        An AssertionError is raised if any output file indicates failure.
         """
         self.readforward.run(input_name=input_name, output_name=output_name)
         flags = self.readforward.check_results(output_names=[output_name])

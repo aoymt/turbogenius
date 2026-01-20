@@ -79,18 +79,24 @@ class Convertpfaff_genius(GeniusIO):
         output_name: str = "out_pfaff",
     ) -> None:
         """
-        Generate input files and run the command.
+        Generate input files and run the convertpfaff command.
 
         Parameters
         ----------
         rotate_flag : bool, optional
-            Rotation flag, True or False, by default False.
+            If True, rotate the angle of spins, by default False.
         rotate_angle : float, optional
-            Rotation angle, by default 0.
+            Rotation angle in units of pi radians, by default 0.
         scale_mean_field : int, optional
-            Scaling factor for mean field, by default 1000.
+            Scaling factor for mean field (used for unpaired cases),
+            by default 1000.
         output_name : str, optional
             Output file name, by default "out_pfaff".
+
+        Notes
+        -----
+        This method calls generate_input() followed by run() to complete
+        the conversion process.
         """
         self.generate_input()
         self.run(
@@ -108,23 +114,30 @@ class Convertpfaff_genius(GeniusIO):
         output_name: str = "out_pfaff",
     ) -> None:
         """
-        Run the command.
+        Run the convertpfaff program.
 
         Parameters
         ----------
         rotate_flag : bool, optional
-            Rotation flag, True or False, by default False.
+            If True, rotate the angle of spins, by default False.
         rotate_angle : float, optional
-            Rotation angle, by default 0.
+            Rotation angle in units of pi radians, by default 0.
         scale_mean_field : int, optional
-            Scaling factor for mean field, by default 1000.
+            Scaling factor for mean field (used for unpaired cases),
+            by default 1000.
         output_name : str, optional
             Output file name, by default "out_pfaff".
 
         Raises
         ------
         AssertionError
-            If the calculation does not complete successfully.
+            If the calculation does not complete successfully (check_results
+            indicates failure for any output file).
+
+        Notes
+        -----
+        This method executes the convertpfaff program and then checks the results.
+        An AssertionError is raised if any output file indicates failure.
         """
         self.convertpfaff.run(
             rotate_flag=rotate_flag,
@@ -137,19 +150,24 @@ class Convertpfaff_genius(GeniusIO):
 
     def check_results(self, output_names: Optional[list] = None) -> bool:
         """
-        Check the result.
+        Check the results of the convertpfaff program execution.
 
         Parameters
         ----------
         output_names : list, optional
-            A list of output file names to check. If None, defaults to
+            List of output file names to check. If None, defaults to
             ["out_pfaff"], by default None.
 
         Returns
         -------
         bool
             True if all the runs were successful, False if an error is
-            detected in the files.
+            detected in the output files.
+
+        Notes
+        -----
+        This method checks the output files for successful completion.
+        Currently, this is a placeholder and always returns True.
         """
         if output_names is None:
             output_names = ["out_pfaff"]

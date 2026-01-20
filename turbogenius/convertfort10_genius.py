@@ -169,7 +169,7 @@ class Convertfort10_genius(GeniusIO):
         output_name: str = "out_conv",
     ) -> None:
         """
-        Generate input files and run the command.
+        Generate input files and run the convertfort10 command.
 
         Parameters
         ----------
@@ -177,24 +177,34 @@ class Convertfort10_genius(GeniusIO):
             Input file name, by default "convertfort10.input".
         output_name : str, optional
             Output file name, by default "out_conv".
+
+        Notes
+        -----
+        This method calls generate_input() followed by run() to complete
+        the conversion process.
         """
         self.generate_input(input_name=input_name)
         self.run(input_name=input_name, output_name=output_name)
 
     def generate_input(self, input_name: str = "convertfort10.input") -> None:
         """
-        Generate input file.
+        Generate input file for the convertfort10 program.
 
         Parameters
         ----------
         input_name : str, optional
             Input file name, by default "convertfort10.input".
+
+        Notes
+        -----
+        This method generates the convertfort10.input file based on the
+        grid settings and other parameters set during initialization.
         """
         self.convertfort10.generate_input(input_name=input_name)
 
     def run(self, input_name="convertfort10.input", output_name="out_conv"):
         """
-        Run the command.
+        Run the convertfort10 program.
 
         Parameters
         ----------
@@ -206,7 +216,13 @@ class Convertfort10_genius(GeniusIO):
         Raises
         ------
         AssertionError
-            If the calculation does not complete successfully.
+            If the calculation does not complete successfully (check_results
+            indicates failure for any output file).
+
+        Notes
+        -----
+        This method executes the convertfort10 program and then checks the results.
+        An AssertionError is raised if any output file indicates failure.
         """
         self.convertfort10.run(input_name=input_name, output_name=output_name)
         flags = self.convertfort10.check_results(output_names=[output_name])
@@ -214,19 +230,24 @@ class Convertfort10_genius(GeniusIO):
 
     def check_results(self, output_names: Optional[list] = None) -> bool:
         """
-        Check the result.
+        Check the results of the convertfort10 program execution.
 
         Parameters
         ----------
         output_names : list, optional
-            A list of output file names to check. If None, defaults to
+            List of output file names to check. If None, defaults to
             ["out_conv"], by default None.
 
         Returns
         -------
         bool
             True if all the runs were successful, False if an error is
-            detected in the files.
+            detected in the output files.
+
+        Notes
+        -----
+        This method checks the output files for successful completion
+        by looking for specific patterns indicating successful execution.
         """
         if output_names is None:
             output_names = ["out_conv"]

@@ -410,12 +410,22 @@ class DFT_genius(GeniusIO):
         output_name: str = "out_prep",
     ) -> None:
         """
-        Generate input files and run the command.
+        Generate input files and run the prep command.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
+        Parameters
+        ----------
+        cont : bool, optional
+            If True, continue from previous calculation (sets iopt=0),
+            by default False.
+        input_name : str, optional
+            Input file name, by default "prep.input".
+        output_name : str, optional
+            Output file name, by default "out_prep".
 
+        Notes
+        -----
+        This method calls generate_input() followed by run() to complete
+        the DFT calculation process.
         """
         self.generate_input(cont=cont, input_name=input_name)
         self.run(input_name=input_name, output_name=output_name)
@@ -424,11 +434,21 @@ class DFT_genius(GeniusIO):
         self, cont: bool = False, input_name: str = "prep.input"
     ) -> None:
         """
-        Generate input file.
+        Generate input file for the prep program.
 
-        Args:
-            input_name (str): input file name
+        Parameters
+        ----------
+        cont : bool, optional
+            If True, continue from previous calculation (sets iopt=0),
+            by default False.
+        input_name : str, optional
+            Input file name, by default "prep.input".
 
+        Notes
+        -----
+        This method generates the prep.input file based on the parameters
+        set during initialization, including grid settings, DFT parameters,
+        and k-point information.
         """
         if cont:
             self.prep.set_parameter("iopt", 0, "$systems")
@@ -439,11 +459,24 @@ class DFT_genius(GeniusIO):
         self, input_name: str = "prep.input", output_name: str = "out_prep"
     ) -> None:
         """
-        Run the command.
+        Run the prep program.
 
-        Args:
-            input_name (str): input file name
-            output_name (str): output file name
+        Parameters
+        ----------
+        input_name : str, optional
+            Input file name, by default "prep.input".
+        output_name : str, optional
+            Output file name, by default "out_prep".
+
+        Raises
+        ------
+        AssertionError
+            If the calculation does not complete successfully.
+
+        Notes
+        -----
+        This method executes the prep program and checks the results.
+        An assertion error is raised if the calculation fails.
         """
         self.prep.run(input_name=input_name, output_name=output_name)
         flags = self.prep.check_results(output_names=[output_name])
@@ -451,12 +484,24 @@ class DFT_genius(GeniusIO):
 
     def check_results(self, output_names: Optional[list] = None) -> None:
         """
-        Check the result.
+        Check the results of the prep program execution.
 
-        Args:
-            output_names (list): a list of output file names
-        Returns:
-            bool: True if all the runs were successful, False if an error is detected in the files.
+        Parameters
+        ----------
+        output_names : list, optional
+            List of output file names to check. If None, defaults to
+            ["out_prep"], by default None.
+
+        Returns
+        -------
+        list of bool
+            List of boolean flags indicating success for each output file.
+            True if the file indicates successful completion, False otherwise.
+
+        Notes
+        -----
+        This method checks the output files for successful completion
+        by looking for specific patterns indicating successful execution.
         """
         if output_names is None:
             output_names = ["out_prep"]
@@ -464,11 +509,31 @@ class DFT_genius(GeniusIO):
 
     def get_mangetic_moments_3d_array(self):  # -> numpy.array(XXX)
         """
-        Return magnetic moment array according to the TurboRVB format.
+        Generate magnetic moment 3D array according to the TurboRVB format.
 
-        Returns:
-            numpy.array: numpy array containing the Magnetic moments according to the TurboRVB format.
+        Returns
+        -------
+        numpy.ndarray
+            Numpy array of shape (nzs, nys, nxs) containing the magnetic moments
+            according to the TurboRVB format.
 
+        Raises
+        ------
+        NotImplementedError
+            If the structure is non-orthorhombic (not implemented).
+        ValueError
+            If the same grid belongs to more than two atoms with different
+            magnetic moments (increase nx, ny, nz to resolve).
+
+        Notes
+        -----
+        This method generates a 3D grid of magnetic moments based on the
+        atomic positions and magnetic moment list. For periodic systems,
+        the origin is set to (0.5, 0.5, 0.5). For isolated molecules,
+        the center of the molecule is shifted to the origin.
+
+        The method assigns magnetic moments to grid points based on proximity
+        to atoms within a specified radius (0.50 Bohr).
         """
 
         io_fort10 = IO_fort10(self.fort10)
