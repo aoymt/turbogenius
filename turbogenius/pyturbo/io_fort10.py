@@ -68,12 +68,16 @@ class Value:
 
     This class stores value, line No., index, and filename for a value in a file (fort.10).
 
-
-    Attributes:
-         value (str, int, float): value in a file
-         lineno (int): specifying the location of the value, line No.
-         index (int): specifying the location of the value, index No.
-         file (str): File name (typically, fort.10)
+    Attributes
+    ----------
+    value : str, int, float
+        Value in a file.
+    lineno : int
+        Specifying the location of the value, line No.
+    index : int
+        Specifying the location of the value, index No.
+    file : str
+        File name (typically, fort.10).
 
     """
 
@@ -93,12 +97,17 @@ class Value:
         self, value: Union[str, int, float, None], in_place: bool = True
     ) -> None:
         """
-        Replace a value
+        Replace a value.
 
-        Args:
-            value (str, int, float): A new value
-            in_place (bool): If true, the file storing the value is updated.
-        Returns:
+        Parameters
+        ----------
+        value : str, int, float
+            A new value.
+        in_place : bool
+            If true, the file storing the value is updated.
+
+        Returns
+        -------
             None
         """
         self.__value = value
@@ -460,11 +469,10 @@ class IO_fort10:
 
     def plot_orbitals(self):
         """
-        Plot orbitals in fort.10 file
+        Plot orbitals in fort.10 file.
 
-        Args:
-            None
-        Returns:
+        Returns
+        -------
             None
         """
 

@@ -76,6 +76,7 @@ def copy_jastrow_twist():
     Notes
     -----
     The function requires the following files to exist:
+
     - kp_info.dat
     - parminimized.d
     - turborvb.scratch directory

@@ -61,6 +61,7 @@ def get_nonlocalmoves_setting(nonlocalmoves: str):
     Notes
     -----
     Available options:
+
     - "tmove": T-move algorithm (typereg=0, npow=0.0)
     - "dla": DLA algorithm (typereg=6, npow=1.0)
     - "dlatm": DLA-TM algorithm (typereg=6, npow=0.0)

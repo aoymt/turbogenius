@@ -300,6 +300,7 @@ def turbo_prim_orb_type_num(orb_type_chr):
     Notes
     -----
     Mapping:
+
     - s: 16, s100: 100, s131: 131
     - p: 36, p103: 103, p150: 150
     - d: 37
@@ -360,6 +361,7 @@ def turbo_cont_orb_type_num(orb_type_chr):
     Notes
     -----
     Mapping:
+
     - s: 300
     - p: 400
     - d: 500
@@ -404,6 +406,7 @@ def turbo_conv_cont_to_prim_orb_type_num(orb_type_int):
     Notes
     -----
     Mapping:
+
     - 16, 300 -> 16 (s)
     - 36, 400 -> 36 (p)
     - 37, 500 -> 37 (d)
