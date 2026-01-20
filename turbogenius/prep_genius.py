@@ -72,7 +72,7 @@ class DFT_genius(GeniusIO):
         by default 1.0e-13.
     kpoints : list, optional
         k Monkhorst-Pack grids, [kx,ky,kz,nx,ny,nz], where kx,y,z are grids
-        and nx,y,z are shift (0) or no shift (1), by default [1, 1, 1, 0.0, 0].
+        and nx,y,z are shift (0) or no shift (1), by default [1, 1, 1, 0, 0, 0].
 
     Attributes
     ----------
@@ -108,7 +108,7 @@ class DFT_genius(GeniusIO):
         if magnetic_moment_list is None:
             magnetic_moment_list = []
         if kpoints is None:
-            kpoints = [1, 1, 1, 0.0, 0]
+            kpoints = [1, 1, 1, 0, 0, 0]
 
         self.fort10 = fort10
         self.grid_a, self.grid_b, self.grid_c = grid_size
